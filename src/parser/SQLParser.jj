@@ -17,8 +17,8 @@ PARSER_BEGIN(SQLParser)
 			Command command;
 			
 			try {
-				command = parser.Command();
-				
+				while(true) {					command = parser.Command();
+				}
 			} catch (ParseException ex) {
 				System.out.println(ex.getMessage());
 				return;
@@ -108,6 +108,7 @@ TOKEN:
 Command Command():
 {
 	Command ret;
+	//System.out.println("Command()");
 }
 {
 	(		ret = CreateTable()
@@ -140,6 +141,8 @@ CreateTableCommand CreateTable():
 	String name;
 	String foreignTable;
 	String foreignName;
+
+	//System.out.println("CreateTable()");
 }
 {
 	< KW_CREATE > < KW_TABLE > < IDENTIFIER >
@@ -169,7 +172,9 @@ AttributeDecl AttrDecl():
 	String name;
 	AttributeDecl.Type type;
 	int length;
-	Exp constraint = null;}{
+	Exp constraint = null;
+
+	//System.out.println("AttrDecl()");}{
 	( < IDENTIFIER > { name = token.image; } )
 	(			
 		(			< KW_INT > { type = AttributeDecl.Type.INT; }
@@ -187,7 +192,9 @@ AttributeDecl AttrDecl():
 
 // DROP TABLE table -----------------------------------------------------------
 DropTableCommand DropTable():
-{}
+{
+	//System.out.println("DropTable()");
+}
 {
 	< KW_DROP > < KW_TABLE > < IDENTIFIER >
 	{ return new DropTableCommand(token, token.image); }
@@ -200,6 +207,8 @@ SelectCommand Select():
 	List<AttributeExp> attributes = new ArrayList<AttributeExp>();
 	List<String> tables = new ArrayList<String>();
 	Exp conditions;
+
+	//System.out.println("Select()");
 }
 {
 	< KW_SELECT >
@@ -224,6 +233,8 @@ InsertCommand Insert():
 	List<Exp> values = new ArrayList<Exp>();
 
 	Exp value;
+	
+	//System.out.println("Insert()");
 }
 {
 	< KW_INSERT > < KW_INTO > < IDENTIFIER > { table = token.image; }
@@ -240,6 +251,7 @@ DeleteCommand Delete():
 {
 	String table;
 	Exp conditions;
+	//System.out.println("Delete()");
 }
 {
 	< KW_DELETE > < KW_FROM >	< IDENTIFIER > { table = token.image; }
@@ -256,6 +268,8 @@ UpdateCommand Update():
 	Exp conditions;
 
 	AssignExp assignment;
+
+	//System.out.println("Update()");
 }
 {
 	< KW_UPDATE > < IDENTIFIER > { table = token.image; }	< KW_SET > ( ( assignment = AssignExpr() ) { assignments.add(assignment); } )	( "," ( assignment = AssignExpr() ) { assignments.add(assignment); } )*
@@ -266,7 +280,8 @@ UpdateCommand Update():
 AssignExp AssignExpr():
 {
 	AttributeExp target;
-	Exp value;}
+	Exp value;
+	//System.out.println("AssignExpr()");}
 {
 	< IDENTIFIER > { target = new AttributeExp(token, token.image); }	< SYM_EQUAL > ( value = Expression() )
 	{ return new AssignExp(token, target, value); }}
@@ -274,14 +289,18 @@ AssignExp AssignExpr():
 
 // HELP TABLES ----------------------------------------------------------------
 HelpTablesCommand HelpTables():
-{}
+{
+	//System.out.println("HelpTables()");
+}
 {
 	< KW_HELP > < KW_TABLES >	{ return new HelpTablesCommand(token); }
 }
 
 // HELP DESCRIBE table --------------------------------------------------------
 HelpDescribeCommand HelpDescribe():
-{}
+{
+	//System.out.println("HelpDescribe()");
+}
 {
 	< KW_HELP > < KW_DESCRIBE > < IDENTIFIER >
 	{ return new HelpDescribeCommand(token, token.image); }
@@ -292,6 +311,7 @@ HelpDescribeCommand HelpDescribe():
 HelpCommandCommand HelpCommand():
 {
 	HelpCommandCommand.Type type;
+	//System.out.println("HelpCommand()");
 }
 {
 	< KW_HELP >
@@ -326,7 +346,9 @@ HelpCommandCommand HelpCommand():
 
 // QUIT -----------------------------------------------------------------------
 QuitCommand Quit():
-{}
+{
+	//System.out.println("Quit()");
+}
 {
 	< KW_QUIT >	{ return new QuitCommand(token); }
 }
@@ -474,12 +496,13 @@ Exp UnaryOp():
 	//System.out.println("UnaryOp()");
 }
 {
-	(			
-		( ( < SYM_PLUS > | < SYM_MINUS > ) { op = token.image; } )				( sub = PrimaryExp() )
-		{ ret = new UnaryExp(token, op, sub); }
-	)
-|	(
-		( ret = PrimaryExp() )
+	(		(			
+			( ( < SYM_PLUS > | < SYM_MINUS > ) { op = token.image; } )					( sub = PrimaryExp() )
+			{ ret = new UnaryExp(token, op, sub); }
+		)
+	|	(
+			( ret = PrimaryExp() )
+		)
 	)
 	{ return ret; }
 }

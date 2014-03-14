@@ -12,8 +12,9 @@
                         Command command;
 
                         try {
-                                command = parser.Command();
-
+                                while(true) {
+                                        command = parser.Command();
+                                }
                         } catch (ParseException ex) {
                                 System.out.println(ex.getMessage());
                                 return;
@@ -639,22 +640,22 @@
         jj_consume_token(-1);
         throw new ParseException();
       }
-                                                     op = token.image;
+                                                             op = token.image;
       sub = PrimaryExp();
-                  ret = new UnaryExp(token, op, sub);
+                          ret = new UnaryExp(token, op, sub);
       break;
     case IDENTIFIER:
     case INT_LITERAL:
     case STRING_LITERAL:
     case 48:
       ret = PrimaryExp();
-          {if (true) return ret;}
       break;
     default:
       jj_la1[21] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
+          {if (true) return ret;}
     throw new Error("Missing return statement in function");
   }
 
@@ -708,20 +709,8 @@
     finally { jj_save(2, xla); }
   }
 
-  private boolean jj_3R_12() {
-    if (jj_scan_token(KW_HELP)) return true;
-    if (jj_scan_token(KW_TABLES)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_13() {
-    if (jj_scan_token(KW_HELP)) return true;
-    if (jj_scan_token(KW_DESCRIBE)) return true;
-    return false;
-  }
-
-  private boolean jj_3_2() {
-    if (jj_3R_13()) return true;
+  private boolean jj_3R_14() {
+    if (jj_scan_token(IDENTIFIER)) return true;
     return false;
   }
 
@@ -731,13 +720,25 @@
     return false;
   }
 
-  private boolean jj_3_1() {
-    if (jj_3R_12()) return true;
+  private boolean jj_3R_12() {
+    if (jj_scan_token(KW_HELP)) return true;
+    if (jj_scan_token(KW_TABLES)) return true;
     return false;
   }
 
-  private boolean jj_3R_14() {
-    if (jj_scan_token(IDENTIFIER)) return true;
+  private boolean jj_3_2() {
+    if (jj_3R_13()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_13() {
+    if (jj_scan_token(KW_HELP)) return true;
+    if (jj_scan_token(KW_DESCRIBE)) return true;
+    return false;
+  }
+
+  private boolean jj_3_1() {
+    if (jj_3R_12()) return true;
     return false;
   }
 
