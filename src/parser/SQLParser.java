@@ -456,7 +456,7 @@
       jj_consume_token(-1);
       throw new ParseException();
     }
-          op = token;  Exp.appendToGlobalExpString(token.image.toUpperCase()+" ");
+          op = token;  Exp.appendToGlobalExpString(" "+token.image.toUpperCase()+" ");
     right = CmpOp();
           {if (true) return new BinaryExp(null, op, right);}
     throw new Error("Missing return statement in function");

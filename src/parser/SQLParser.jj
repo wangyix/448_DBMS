@@ -382,7 +382,7 @@ BinaryExp LogicOp_postfix():
 }
 {
 	( < KW_AND > | < KW_OR > )
-	{ op = token;  Exp.appendToGlobalExpString(token.image.toUpperCase()+" "); }
+	{ op = token;  Exp.appendToGlobalExpString(" "+token.image.toUpperCase()+" "); }
 	( right = CmpOp() )
 	{ return new BinaryExp(null, op, right); }
 }
