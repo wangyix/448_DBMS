@@ -1,21 +1,25 @@
 package ast;
 
 import java.util.*;
+
 import parser.Token;
+import schema.Attribute;
 
 public class CreateTableCommand extends Command {
 	String table;
-	Map<String, AttributeDecl> attributes;	// maps attr name to its own description
+	// maps attr name to its own description
+	Map<String, Attribute> attributes;
 	List<String> primaryKey;
-	Map<String, AttributeDecl> foreignKeys;	// maps attr name to description of some attr in (prbaboly) another table
+	// maps attr name to description of some attr in foreign table
+	Map<String, Attribute> foreignKeys;
 	
-	public CreateTableCommand(Token tok, String table, List<AttributeDecl> attributeDecls, 
-			List<String> primaryKey, Map<String, AttributeDecl> foreignKeys) {
+	public CreateTableCommand(Token tok, String table, List<Attribute> Attributes, 
+			List<String> primaryKey, Map<String, Attribute> foreignKeys) {
 		super(tok);
 		this.table = table;
 		
-		attributes = new HashMap<String, AttributeDecl>();
-		for (AttributeDecl a : attributeDecls) {
+		attributes = new HashMap<String, Attribute>();
+		for (Attribute a : Attributes) {
 			attributes.put(a.getName(), a);
 		}
 		
@@ -27,7 +31,7 @@ public class CreateTableCommand extends Command {
 		return table;
 	}
 
-	public Map<String, AttributeDecl> getAttributes() {
+	public Map<String, Attribute> getAttributes() {
 		return attributes;
 	}
 
@@ -35,9 +39,9 @@ public class CreateTableCommand extends Command {
 		return primaryKey;
 	}
 
-	public Map<String, AttributeDecl> getForeignKeys() {
+	public Map<String, Attribute> getForeignKeys() {
 		return foreignKeys;
 	}
 	
-	
+	public Object accept(ASTVisitor visitor) { return visitor.visit(this); }
 }

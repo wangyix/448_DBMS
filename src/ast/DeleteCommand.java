@@ -14,4 +14,6 @@ public class DeleteCommand extends Command {
 	
 	public String getTable() { return table; }
 	public Exp getConditions() { return conditions; }
+	
+	public Object accept(ASTVisitor visitor) { return visitor.visit(this); }
 }

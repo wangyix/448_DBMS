@@ -16,4 +16,6 @@ public class HelpCommandCommand extends Command {
 	}
 	
 	public Type getType() { return type; }
+	
+	public Object accept(ASTVisitor visitor) { return visitor.visit(this); }
 }

@@ -11,4 +11,6 @@ public class HelpDescribeCommand extends Command {
 	}
 	
 	public String getTable() { return table; }
+	
+	public Object accept(ASTVisitor visitor) { return visitor.visit(this); }
 }

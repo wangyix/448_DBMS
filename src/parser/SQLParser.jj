@@ -8,22 +8,10 @@ PARSER_BEGIN(SQLParser)
 	
 	import java.util.*;
 	import ast.*;
+	import schema.*;
 
 	public class SQLParser {
-	
-		public static void main(String[] args) {
-		
-			SQLParser parser = new SQLParser(System.in);
-			Command command;
-			
-			try {
-				while(true) {					command = parser.Command();
-				}
-			} catch (ParseException ex) {
-				System.out.println(ex.getMessage());
-				return;
-			}
-		}
+
 	}
 PARSER_END(SQLParser)
 
@@ -110,20 +98,17 @@ Command Command():
 	Command ret;
 	//System.out.println("Command()");
 }
-{
-	(		ret = CreateTable()
-	|	ret = DropTable()
-	|	ret = Select()
-	|	ret = Insert()
-	|	ret = Delete()
-	|	ret = Update()
-	|	(
-			LOOKAHEAD(2) ret = HelpTables()
-		|	LOOKAHEAD(2) ret = HelpDescribe()
-		|	ret = HelpCommand()
-		)
-	|	ret = Quit()
-	) ";"
+{	ret = CreateTable()
+|	ret = DropTable()
+|	ret = Select()
+|	ret = Insert()
+|	ret = Delete()
+|	ret = Update()
+|	LOOKAHEAD(2) ret = HelpTables()
+|	LOOKAHEAD(2) ret = HelpDescribe()
+|	ret = HelpCommand()
+|	ret = Quit()
+	
 	{ return ret; }
 }
 
@@ -131,11 +116,11 @@ Command Command():
 CreateTableCommand CreateTable():
 {
 	String table;
-	List<AttributeDecl> attributes = new ArrayList<AttributeDecl>();
+	List<Attribute> attributes = new ArrayList<Attribute>();
 	List<String> primaryKey = new ArrayList<String>();
-	Map<String, AttributeDecl> foreignKeys = new HashMap<String, AttributeDecl>();
+	Map<String, Attribute> foreignKeys = new HashMap<String, Attribute>();
 	
-	AttributeDecl attribute;
+	Attribute attribute;
 
 	// for foreign key stuff
 	String name;
@@ -150,10 +135,9 @@ CreateTableCommand CreateTable():
 	"("
 	(
 		(
-			( ( attribute = AttrDecl() ) { attributes.add(attribute.setTable(table)); } )
-			( LOOKAHEAD(2) "," ( attribute = AttrDecl() ) { attributes.add(attribute.setTable(table)); } )*
+			( ( attribute = AttrDecl() ) { attributes.add(attribute.setTable(table)); } ",")+
 		)
-		(			"," < KW_PRIMARY > < KW_KEY >
+		(			< KW_PRIMARY > < KW_KEY >
 			"("
 				( < IDENTIFIER > { primaryKey.add(token.image); } )				( "," < IDENTIFIER > { primaryKey.add(token.image); } )*
 			")"
@@ -162,32 +146,36 @@ CreateTableCommand CreateTable():
 			"," < KW_FOREIGN > < KW_KEY > "(" ( < IDENTIFIER > { name = token.image; } ) ")"
 			< KW_REFERENCES > ( < IDENTIFIER > { foreignTable = token.image; } )
 			"(" ( < IDENTIFIER > { foreignName = token.image; } ) ")"
-			{ foreignKeys.put(name, new AttributeDecl(token, foreignTable, foreignName)); }
+			{ foreignKeys.put(name, new Attribute(foreignTable, foreignName)); }
 		)*	)
-	")"	{ return new CreateTableCommand(token, table, attributes, primaryKey, foreignKeys); }
+	");"	{ return new CreateTableCommand(token, table, attributes, primaryKey, foreignKeys); }
 }
 
-AttributeDecl AttrDecl():
+Attribute AttrDecl():
 {
 	String name;
-	AttributeDecl.Type type;
-	int length;
+	Attribute.Type type;
+	int length = -1;
 	Exp constraint = null;
 
 	//System.out.println("AttrDecl()");}{
 	( < IDENTIFIER > { name = token.image; } )
 	(			
-		(			< KW_INT > { type = AttributeDecl.Type.INT; }
+		(			< KW_INT > { type = Attribute.Type.INT; }
 		)
 	|	(
-			< KW_CHAR > "(" < INT_LITERAL > { length=Integer.parseInt(token.image); } ")"			{ type = AttributeDecl.Type.CHAR; } 		)
+			< KW_CHAR > "(" < INT_LITERAL > { length=Integer.parseInt(token.image); } ")"			{ type = Attribute.Type.CHAR; } 		)
 	|	(
-			< KW_DECIMAL > { type = AttributeDecl.Type.DECIMAL; }
+			< KW_DECIMAL > { type = Attribute.Type.DECIMAL; }
 		)
 	)
 	(
-		< KW_CHECK > "(" ( constraint = Expression() ) ")"	)?
-	{ return new AttributeDecl(token, null, type, name, constraint); }}
+		// the constraint exp should have an expString generated
+		< KW_CHECK >
+		"(" (
+				constraint = Expression()
+		) ")"	)?
+	{ return new Attribute(null, type, length, name, constraint); }}
 
 
 // DROP TABLE table -----------------------------------------------------------
@@ -196,7 +184,7 @@ DropTableCommand DropTable():
 	//System.out.println("DropTable()");
 }
 {
-	< KW_DROP > < KW_TABLE > < IDENTIFIER >
+	< KW_DROP > < KW_TABLE > < IDENTIFIER > ";"
 	{ return new DropTableCommand(token, token.image); }
 }
 
@@ -221,7 +209,7 @@ SelectCommand Select():
 	< KW_FROM >
 	( < IDENTIFIER > { tables.add(token.image); } )
 	( "," < IDENTIFIER > { tables.add(token.image); } )*
-	< KW_WHERE > ( conditions = Expression() )
+	< KW_WHERE > ( conditions = Expression() ) ";"
 	{ return new SelectCommand(token, attributes, tables, conditions); }
 }
 
@@ -241,7 +229,7 @@ InsertCommand Insert():
 	< KW_VALUES > "("
 	( ( value = Expression() ) { values.add(value); } )
 	( "," ( value = Expression() ) { values.add(value); } )*
-	")"
+	");"
 	{ return new InsertCommand(token, table, values); }
 }
 
@@ -255,7 +243,7 @@ DeleteCommand Delete():
 }
 {
 	< KW_DELETE > < KW_FROM >	< IDENTIFIER > { table = token.image; }
-	< KW_WHERE > ( conditions = Expression() )
+	< KW_WHERE > ( conditions = Expression() ) ";"
 	{ return new DeleteCommand(token, table, conditions); }
 }
 
@@ -264,27 +252,27 @@ DeleteCommand Delete():
 UpdateCommand Update():
 {
 	String table;
-	List<AssignExp > assignments = new ArrayList<AssignExp>();
+	List<AttributeAssign > assignments = new ArrayList<AttributeAssign>();
 	Exp conditions;
 
-	AssignExp assignment;
+	AttributeAssign assignment;
 
 	//System.out.println("Update()");
 }
 {
-	< KW_UPDATE > < IDENTIFIER > { table = token.image; }	< KW_SET > ( ( assignment = AssignExpr() ) { assignments.add(assignment); } )	( "," ( assignment = AssignExpr() ) { assignments.add(assignment); } )*
-	< KW_WHERE > ( conditions = Expression() )
+	< KW_UPDATE > < IDENTIFIER > { table = token.image; }	< KW_SET > ( ( assignment = AttributeAssignr() ) { assignments.add(assignment); } )	( "," ( assignment = AttributeAssignr() ) { assignments.add(assignment); } )*
+	< KW_WHERE > ( conditions = Expression() ) ";"
 	{ return new UpdateCommand(token, table, assignments, conditions); }
 }
 
-AssignExp AssignExpr():
+AttributeAssign AttributeAssignr():
 {
 	AttributeExp target;
 	Exp value;
-	//System.out.println("AssignExpr()");}
+	//System.out.println("AttributeAssignr()");}
 {
 	< IDENTIFIER > { target = new AttributeExp(token, token.image); }	< SYM_EQUAL > ( value = Expression() )
-	{ return new AssignExp(token, target, value); }}
+	{ return new AttributeAssign(token, target, value); }}
 
 
 // HELP TABLES ----------------------------------------------------------------
@@ -293,7 +281,7 @@ HelpTablesCommand HelpTables():
 	//System.out.println("HelpTables()");
 }
 {
-	< KW_HELP > < KW_TABLES >	{ return new HelpTablesCommand(token); }
+	< KW_HELP > < KW_TABLES > ";"	{ return new HelpTablesCommand(token); }
 }
 
 // HELP DESCRIBE table --------------------------------------------------------
@@ -302,7 +290,7 @@ HelpDescribeCommand HelpDescribe():
 	//System.out.println("HelpDescribe()");
 }
 {
-	< KW_HELP > < KW_DESCRIBE > < IDENTIFIER >
+	< KW_HELP > < KW_DESCRIBE > < IDENTIFIER > ";"
 	{ return new HelpDescribeCommand(token, token.image); }
 }
 
@@ -339,7 +327,7 @@ HelpCommandCommand HelpCommand():
 			< KW_UPDATE >
 			{ type = HelpCommandCommand.Type.UPDATE; }
 		)
-	)
+	) ";"
 	{ return new HelpCommandCommand(token, type); }
 }
 
@@ -350,7 +338,7 @@ QuitCommand Quit():
 	//System.out.println("Quit()");
 }
 {
-	< KW_QUIT >	{ return new QuitCommand(token); }
+	< KW_QUIT > ";"	{ return new QuitCommand(token); }
 }
 
 
@@ -365,8 +353,9 @@ Exp Expression():
 	//System.out.println("Expression()");
 }
 {
-	( ret = LogicOp() )
-	{ return ret; }
+	{ Exp.clearGlobalExpString(); }
+	ret = LogicOp()
+	{ ret.saveExpString();  return ret; }
 }
 
 
@@ -393,7 +382,7 @@ BinaryExp LogicOp_postfix():
 }
 {
 	( < KW_AND > | < KW_OR > )
-	{ op = token; }
+	{ op = token;  Exp.appendToGlobalExpString(token.image.toUpperCase()+" "); }
 	( right = CmpOp() )
 	{ return new BinaryExp(null, op, right); }
 }
@@ -423,7 +412,7 @@ BinaryExp CmpOp_postfix():
 {
 	( < SYM_LESS > | < SYM_LESSEQUAL > | < SYM_EQUAL >
 	| < SYM_EXCLEQUAL > | < SYM_MORE > | < SYM_MOREEQUAL > )
-	{ op =  token; }
+	{ op =  token;  Exp.appendToGlobalExpString(token.image); }
 	( right = AddOp() )
 	{ return new BinaryExp(null, op, right); }
 }
@@ -452,7 +441,7 @@ BinaryExp AddOp_postfix():
 }
 {
 	( < SYM_PLUS > | < SYM_MINUS > )
-	{ op = token; }
+	{ op = token;  Exp.appendToGlobalExpString(token.image); }
 	( right = MulOp() )
 	{ return new BinaryExp(null, op, right); }
 }
@@ -481,7 +470,7 @@ BinaryExp MulOp_postfix():
 }
 {
 	( < SYM_STAR > | < SYM_SLASH > )
-	{ op = token; }
+	{ op = token;  Exp.appendToGlobalExpString(token.image); }
 	( right = UnaryOp() )
 	{ return new BinaryExp(null, op, right); }
 }
@@ -497,7 +486,8 @@ Exp UnaryOp():
 }
 {
 	(		(			
-			( ( < SYM_PLUS > | < SYM_MINUS > ) { op = token.image; } )					( sub = PrimaryExp() )
+			( < SYM_PLUS > | < SYM_MINUS > )
+			{ op = token.image;  Exp.appendToGlobalExpString(token.image); }					( sub = PrimaryExp() )
 			{ ret = new UnaryExp(token, op, sub); }
 		)
 	|	(
@@ -517,18 +507,19 @@ Exp PrimaryExp():
 	(
 		(
 			< INT_LITERAL >
-			{ ret = new IntLiteralExp(token, Integer.parseInt(token.image)); }
+			{ ret = new IntLiteralExp(token, Integer.parseInt(token.image));  Exp.appendToGlobalExpString(token.image); }
 		)
 	|	(
 			< STRING_LITERAL >
-			{ ret = new StringLiteralExp(token, token.image); }
+			{ ret = new StringLiteralExp(token, token.image);  Exp.appendToGlobalExpString(token.image); }
 		)
 	|	(
 			< IDENTIFIER >
-			{ ret = new AttributeExp(token, token.image); }
+			{ ret = new AttributeExp(token, token.image);  Exp.appendToGlobalExpString(token.image); }
 		)
 	|	(
-			"(" ( ret = Expression() ) ")"
+			"(" { Exp.appendToGlobalExpString('('); }			( ret = LogicOp() )
+			")" { Exp.appendToGlobalExpString(')'); }
 		)
 	)
 	{ return ret; }

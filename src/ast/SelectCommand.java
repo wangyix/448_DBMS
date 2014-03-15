@@ -1,6 +1,7 @@
 package ast;
 
 import java.util.*;
+
 import parser.Token;
 
 public class SelectCommand extends Command {
@@ -26,4 +27,6 @@ public class SelectCommand extends Command {
 	public Exp getConditions() {
 		return conditions;
 	}
+	
+	public Object accept(ASTVisitor visitor) { return visitor.visit(this); }
 }
