@@ -2,46 +2,62 @@ package ast;
 
 import java.util.*;
 
+import database.Attribute;
 import parser.Token;
-import schema.Attribute;
 
 public class CreateTableCommand extends Command {
-	String table;
-	// maps attr name to its own description
-	Map<String, Attribute> attributes;
-	List<String> primaryKey;
-	// maps attr name to description of some attr in foreign table
-	Map<String, Attribute> foreignKeys;
 	
-	public CreateTableCommand(Token tok, String table, List<Attribute> Attributes, 
-			List<String> primaryKey, Map<String, Attribute> foreignKeys) {
-		super(tok);
-		this.table = table;
+	public static class ForeignKeyDescriptor{
+		private String refTableName;
+		List<String> localAttrNames;
+		List<String> refAttrNames;
 		
-		attributes = new HashMap<String, Attribute>();
-		for (Attribute a : Attributes) {
-			attributes.put(a.getName(), a);
+		public ForeignKeyDescriptor(String refTableName, List<String> localAttrNames,
+				List<String> refAttrNames) {
+			this.refTableName = refTableName;
+			this.localAttrNames = localAttrNames;
+			this.refAttrNames = refAttrNames;
 		}
+		public String getRefTableName() {
+			return refTableName;
+		}
+		public List<String> getLocalAttrNames() {
+			return localAttrNames;
+		}
+		public List<String> getRefAttrNames() {
+			return refAttrNames;
+		}
+	}
+	
+	private String tableName;
+	private List<Attribute> attributes;
+	private List<String> primaryKeyAttrNames;
+	private List<ForeignKeyDescriptor> foreignKeyDescriptors;
 		
-		this.primaryKey = primaryKey;
-		this.foreignKeys = foreignKeys;
+	
+	public CreateTableCommand(Token tok, String tableName, List<Attribute> attributes, 
+			List<String> primaryKeyAttrNames, List<ForeignKeyDescriptor> foreignKeyDescriptors) {
+		super(tok);
+		this.tableName = tableName;
+		this.attributes = attributes;
+		this.primaryKeyAttrNames = primaryKeyAttrNames;
+		this.foreignKeyDescriptors = foreignKeyDescriptors;
 	}
 
-	public String getTable() {
-		return table;
+	
+	
+	public String getTableName() {
+		return tableName;
 	}
-
-	public Map<String, Attribute> getAttributes() {
+	public List<Attribute> getAttributes() {
 		return attributes;
 	}
-
-	public List<String> getPrimaryKey() {
-		return primaryKey;
+	public List<String> getPrimaryKeyAttrNames() {
+		return primaryKeyAttrNames;
+	}
+	public List<ForeignKeyDescriptor> getForeignKeyDescriptors() {
+		return foreignKeyDescriptors;
 	}
 
-	public Map<String, Attribute> getForeignKeys() {
-		return foreignKeys;
-	}
-	
 	public Object accept(ASTVisitor visitor) { return visitor.visit(this); }
 }

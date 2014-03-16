@@ -8,7 +8,7 @@ public class HelpCommandCommand extends Command {
 		CREATE_TABLE, DROP_TABLE, SELECT, INSERT, DELETE, UPDATE
 	}
 	
-	Type type;
+	private Type type;
 	
 	public HelpCommandCommand(Token tok, Type type) {
 		super(tok);

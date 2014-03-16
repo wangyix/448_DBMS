@@ -8,7 +8,8 @@ PARSER_BEGIN(SQLParser)
 	
 	import java.util.*;
 	import ast.*;
-	import schema.*;
+	import database.*;
+	import value.*;
 
 	public class SQLParser {
 
@@ -87,6 +88,7 @@ TOKEN:
 TOKEN:
 {
 	< INT_LITERAL: (["0"-"9"])+ >
+|	< DECIMAL_LITERAL: (["0"-"9"])*"."(["0"-"9"])+ >
 |	< STRING_LITERAL: "'"(~["\\","'"]|"''"|"\\'")*"'" >	// ??? might be wrong
 }
 
@@ -115,43 +117,41 @@ Command Command():
 // CREATE TABLE ( ... ) -------------------------------------------------------
 CreateTableCommand CreateTable():
 {
-	String table;
+	String tableName;
 	List<Attribute> attributes = new ArrayList<Attribute>();
-	List<String> primaryKey = new ArrayList<String>();
-	Map<String, Attribute> foreignKeys = new HashMap<String, Attribute>();
-	
+	List<String> primaryKeyAttrNames = new ArrayList<String>();
+	List<CreateTableCommand.ForeignKeyDescriptor> foreignKeyDescriptors
+		 = new ArrayList<CreateTableCommand.ForeignKeyDescriptor>();
+
+	int position = 0;
 	Attribute attribute;
-
-	// for foreign key stuff
-	String name;
-	String foreignTable;
-	String foreignName;
-
+	CreateTableCommand.ForeignKeyDescriptor foreignKeyDescriptor;
+	
 	//System.out.println("CreateTable()");
 }
 {
 	< KW_CREATE > < KW_TABLE > < IDENTIFIER >
-	{ table = token.image; }
+	{ tableName = token.image; }
 	"("
 	(
 		(
-			( ( attribute = AttrDecl() ) { attributes.add(attribute.setTable(table)); } ",")+
-		)
+			( attribute = AttrDecl(position) ) ","
+			{ attributes.add(attribute); position++; }
+		)+
 		(			< KW_PRIMARY > < KW_KEY >
 			"("
-				( < IDENTIFIER > { primaryKey.add(token.image); } )				( "," < IDENTIFIER > { primaryKey.add(token.image); } )*
+				( < IDENTIFIER > { primaryKeyAttrNames.add(token.image); } )				( "," < IDENTIFIER > { primaryKeyAttrNames.add(token.image); } )*
 			")"
 		)
 		(
-			"," < KW_FOREIGN > < KW_KEY > "(" ( < IDENTIFIER > { name = token.image; } ) ")"
-			< KW_REFERENCES > ( < IDENTIFIER > { foreignTable = token.image; } )
-			"(" ( < IDENTIFIER > { foreignName = token.image; } ) ")"
-			{ foreignKeys.put(name, new Attribute(foreignTable, foreignName)); }
+			"," ( foreignKeyDescriptor = ForeignKeyDecl() )
+			{ foreignKeyDescriptors.add(foreignKeyDescriptor); }
 		)*	)
-	");"	{ return new CreateTableCommand(token, table, attributes, primaryKey, foreignKeys); }
+	");"	{ return new CreateTableCommand(token, tableName, attributes,
+					primaryKeyAttrNames, foreignKeyDescriptors); }
 }
 
-Attribute AttrDecl():
+Attribute AttrDecl(int position):
 {
 	String name;
 	Attribute.Type type;
@@ -175,8 +175,27 @@ Attribute AttrDecl():
 		"(" (
 				constraint = Expression()
 		) ")"	)?
-	{ return new Attribute(null, type, length, name, constraint); }}
+	{ return new Attribute(position, name, type, length, constraint); }}
 
+CreateTableCommand.ForeignKeyDescriptor ForeignKeyDecl():
+{	String refTableName;
+	List<String> localAttrNames = new ArrayList<String>();
+	List<String> refAttrNames = new ArrayList<String>();
+}
+{
+	< KW_FOREIGN > < KW_KEY >
+	"("
+	( < IDENTIFIER > { localAttrNames.add(token.image); } )
+	( "," < IDENTIFIER > { localAttrNames.add(token.image); } )*
+	")"
+	< KW_REFERENCES >
+	( < IDENTIFIER > { refTableName = token.image; } )
+	"("
+	( < IDENTIFIER > { refAttrNames.add(token.image); } )
+	( "," < IDENTIFIER > { refAttrNames.add(token.image); } )*
+	")"
+	{ return new CreateTableCommand.ForeignKeyDescriptor(
+		refTableName, localAttrNames, refAttrNames); }}
 
 // DROP TABLE table -----------------------------------------------------------
 DropTableCommand DropTable():
@@ -506,16 +525,24 @@ Exp PrimaryExp():
 {
 	(
 		(
+			< DECIMAL_LITERAL >	// put this before INT_LITERAL since INT_LITERAL is a substring
+			{ ret = new LiteralExp(token, new DecimalValue(Double.parseDouble(token.image)));
+			Exp.appendToGlobalExpString(token.image); }
+		)
+	|	(
 			< INT_LITERAL >
-			{ ret = new IntLiteralExp(token, Integer.parseInt(token.image));  Exp.appendToGlobalExpString(token.image); }
+			{ ret = new LiteralExp(token, new IntValue(Integer.parseInt(token.image)));
+			Exp.appendToGlobalExpString(token.image); }
 		)
 	|	(
 			< STRING_LITERAL >
-			{ ret = new StringLiteralExp(token, token.image);  Exp.appendToGlobalExpString(token.image); }
+			{ ret = new LiteralExp(token, new StringValue(token.image));
+			Exp.appendToGlobalExpString(token.image); }
 		)
 	|	(
 			< IDENTIFIER >
-			{ ret = new AttributeExp(token, token.image);  Exp.appendToGlobalExpString(token.image); }
+			{ ret = new AttributeExp(token, token.image);
+			Exp.appendToGlobalExpString(token.image); }
 		)
 	|	(
 			"(" { Exp.appendToGlobalExpString('('); }			( ret = LogicOp() )

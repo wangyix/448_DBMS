@@ -3,8 +3,8 @@ package ast;
 import parser.Token;
 
 public class DeleteCommand extends Command {
-	String table;
-	Exp conditions;
+	private String table;
+	private Exp conditions;
 	
 	public DeleteCommand(Token tok, String table, Exp conditions) {
 		super(tok);

@@ -5,8 +5,8 @@ import java.util.*;
 import parser.Token;
 
 public class InsertCommand extends Command {
-	String table;
-	List<Exp> values;
+	private String table;
+	private List<Exp> values;
 	
 	public InsertCommand(Token tok, String table, List<Exp> values) {
 		super(tok);

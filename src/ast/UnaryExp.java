@@ -12,7 +12,7 @@ public class UnaryExp extends Exp {
         this.sub = sub;
     }
 
-    @Override public ASTNode[] children() { return new ASTNode[]{sub}; }
+    //@Override public ASTNode[] children() { return new ASTNode[]{sub}; }
     public Exp getSub() { return sub; }
 
     public Object accept(ASTVisitor visitor) { return visitor.visit(this); }

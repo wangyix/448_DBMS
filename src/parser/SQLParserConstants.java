@@ -87,7 +87,9 @@ public interface SQLParserConstants {
   /** RegularExpression Id. */
   int INT_LITERAL = 45;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 46;
+  int DECIMAL_LITERAL = 46;
+  /** RegularExpression Id. */
+  int STRING_LITERAL = 47;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -140,6 +142,7 @@ public interface SQLParserConstants {
     "\">=\"",
     "<IDENTIFIER>",
     "<INT_LITERAL>",
+    "<DECIMAL_LITERAL>",
     "<STRING_LITERAL>",
     "\"(\"",
     "\",\"",

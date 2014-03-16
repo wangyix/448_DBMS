@@ -13,7 +13,7 @@ public class BinaryExp extends Exp {
         this.right = right;
     }
 
-    @Override public ASTNode[] children() { return new ASTNode[]{left, right}; }
+    //@Override public ASTNode[] children() { return new ASTNode[]{left, right}; }
     public Exp getLeft() { return left; }
     public Exp getRight() { return right; }
     public Token getOp() { return op; }

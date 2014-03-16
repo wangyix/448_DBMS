@@ -12,12 +12,13 @@ public class AttributeAssign extends ASTNode {
         this.value = value;
     }
 
+    /*
     @Override public ASTNode[] children() {
     	if (value==null)
  			return new ASTNode[]{target};
  		else
     		return new ASTNode[]{target, value};
-    }
+    }*/
     
     public AttributeExp getTarget() { return target; }
     public Exp getValue() { return value; }

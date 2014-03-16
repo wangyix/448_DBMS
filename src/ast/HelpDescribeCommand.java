@@ -3,7 +3,7 @@ package ast;
 import parser.Token;
 
 public class HelpDescribeCommand extends Command {
-	String table;
+	private String table;
 	
 	public HelpDescribeCommand(Token tok, String table) {
 		super(tok);

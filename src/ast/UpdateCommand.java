@@ -5,9 +5,9 @@ import java.util.*;
 import parser.Token;
 
 public class UpdateCommand extends Command {
-	String table;
-	List<AttributeAssign> assignments;
-	Exp conditions;
+	private String table;
+	private List<AttributeAssign> assignments;
+	private Exp conditions;
 	
 	public UpdateCommand(Token tok, String table, List<AttributeAssign> assignments, Exp conditions) {
 		super(tok);

@@ -3,7 +3,7 @@ package ast;
 import parser.Token;
 
 public class DropTableCommand extends Command {
-	String table;
+	private String table;
 	
 	public DropTableCommand(Token tok, String table) {
 		super(tok);

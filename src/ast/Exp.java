@@ -27,7 +27,6 @@ public class Exp extends ASTNode {
 	
 	public void saveExpString() {
 		expString = sb.toString();
-		System.out.println(expString);
 	}
 	
 	public String getExpString() {

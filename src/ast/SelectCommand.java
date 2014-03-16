@@ -5,9 +5,9 @@ import java.util.*;
 import parser.Token;
 
 public class SelectCommand extends Command {
-	List<AttributeExp> attributes;	// empty means SELECT *
-	List<String> tables;
-	Exp conditions;
+	private List<AttributeExp> attributes;	// empty means SELECT *
+	private List<String> tables;
+	private Exp conditions;
 	
 	public SelectCommand(Token tok, List<AttributeExp> attributes, List<String> tables, Exp conditions) {
 		super(tok);

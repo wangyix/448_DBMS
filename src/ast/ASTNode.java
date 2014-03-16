@@ -9,9 +9,10 @@ public class ASTNode {
         this.tok = tok;
     }
 
+    /*
     public ASTNode[] children() {
         return new ASTNode[0];
-    }
+    }*/
 
     public Token getToken() { return tok; }
 
