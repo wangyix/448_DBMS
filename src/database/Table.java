@@ -16,5 +16,12 @@ public class Table {
 	public Schema getSchema() {
 		return schema;
 	}
+	
+	public List<Tuple> getTuples() {
+		return tuples;
+	}
+	
+	// addTuple
+	// contains check for schema compliance
 }
 

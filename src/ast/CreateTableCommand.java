@@ -3,6 +3,7 @@ package ast;
 import java.util.*;
 
 import database.Attribute;
+import exception.DatabaseException;
 import parser.Token;
 
 public class CreateTableCommand extends Command {
@@ -59,5 +60,5 @@ public class CreateTableCommand extends Command {
 		return foreignKeyDescriptors;
 	}
 
-	public Object accept(ASTVisitor visitor) { return visitor.visit(this); }
+	public Object accept(ASTVisitor visitor) throws DatabaseException { return visitor.visit(this); }
 }

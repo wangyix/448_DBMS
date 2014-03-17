@@ -3,23 +3,32 @@ package database;
 import java.io.*;
 import java.util.*;
 
-import value.*;
 
 public class Tuple implements Serializable {
 
 	private static final long serialVersionUID = 9016548390245302552L;
 	
-	private List<Value> values;
+	private Table parentTable;
+	private List<Object> values;
 	
-	public Tuple() {
-		values = new ArrayList<Value>();
+	public Tuple(Table parentTable) {
+		this.parentTable = parentTable;
+		values = new ArrayList<Object>();
 	}
 	
-	public void append(Value v) {
+	public void append(Object v) {
 		values.add(v);
 	}
 	
-	public List<Value> getValues() {
+	public Table getParentTable() {
+		return parentTable;
+	}
+	
+	public List<Object> getValues() {
 		return values;
+	}
+	
+	public Object getValueAt(int position) {
+		return values.get(position);
 	}
 }

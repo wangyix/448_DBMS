@@ -1,5 +1,6 @@
 package ast;
 
+import exception.DatabaseException;
 import parser.Token;
 
 public class Exp extends ASTNode {
@@ -33,5 +34,5 @@ public class Exp extends ASTNode {
 		return expString;
 	}
 	
-    public Object accept(ASTVisitor visitor) { return visitor.visit(this); }
+    public Object accept(ASTVisitor visitor) throws DatabaseException { return visitor.visit(this); }
 }

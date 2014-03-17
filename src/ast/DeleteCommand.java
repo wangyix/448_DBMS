@@ -1,5 +1,6 @@
 package ast;
 
+import exception.DatabaseException;
 import parser.Token;
 
 public class DeleteCommand extends Command {
@@ -15,5 +16,5 @@ public class DeleteCommand extends Command {
 	public String getTable() { return table; }
 	public Exp getConditions() { return conditions; }
 	
-	public Object accept(ASTVisitor visitor) { return visitor.visit(this); }
+	public Object accept(ASTVisitor visitor) throws DatabaseException { return visitor.visit(this); }
 }

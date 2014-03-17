@@ -2,6 +2,7 @@ package ast;
 
 import java.util.*;
 
+import exception.DatabaseException;
 import parser.Token;
 
 public class UpdateCommand extends Command {
@@ -20,5 +21,5 @@ public class UpdateCommand extends Command {
 	public List<AttributeAssign> getAssignments() { return assignments; }
 	public Exp getConditions() { return conditions; }
 	
-	public Object accept(ASTVisitor visitor) { return visitor.visit(this); }
+	public Object accept(ASTVisitor visitor) throws DatabaseException { return visitor.visit(this); }
 }

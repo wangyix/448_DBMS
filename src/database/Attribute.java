@@ -2,7 +2,6 @@ package database;
 
 import java.io.*;
 
-import exception.DatabaseException;
 import parser.ParseException;
 import parser.SQLParser;
 import ast.*;
@@ -13,29 +12,6 @@ public class Attribute implements Serializable{
 
 	public enum Type {
 		INT, CHAR, DECIMAL;
-		/*
-		private static Type[] types;	// maps int to Type
-		private int index;				// maps Type to int
-		
-		// assign index to each enum value, insert into types array
-		static {
-			types = new Type[3];
-			int index = 0;
-			for (Type t : EnumSet.allOf(Type.class)){
-				t.setIndex(index);
-				types[index] = t;
-				index++;
-			}
-		}
-		
-		Type() {}
-		private void setIndex(int i) { index = i; }
-		
-		// methods to convert between Type and int
-		public int toInt() { return index; }
-		public static Type intToType(int i) {
-			return types[i];
-		}*/
 	}
 	
 	private int position;
@@ -63,12 +39,13 @@ public class Attribute implements Serializable{
 	private void writeObject(ObjectOutputStream oos) throws IOException {
 		oos.defaultWriteObject();
 		if (constraint != null)
-			oos.writeObject(constraint.getExpString());	// constraint stored as its lexeme
+			// constraint stored as its exp string
+			oos.writeObject(constraint.getExpString());
 		else
 			oos.writeObject("");
 	}
 	private void readObject(ObjectInputStream ois) throws IOException, 
-								ClassNotFoundException, DatabaseException {
+								ClassNotFoundException {
 		ois.defaultReadObject();
 		
 		String expString = (String)ois.readObject();
@@ -77,9 +54,9 @@ public class Attribute implements Serializable{
 		} else {
 			InputStream is = new ByteArrayInputStream(expString.getBytes());
 			try {
-				constraint = (new SQLParser(is)).Expression();
+				constraint = (new SQLParser(is)).ExpressionFromDisk();
 			} catch (ParseException e) {
-				throw new DatabaseException("Attribute constraint expression corrupted in disk");
+				throw new IOException("Attribute constraint expression corrupted in disk.");
 			}
 		}
 	}

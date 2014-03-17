@@ -1,14 +1,37 @@
 package ast;
 
+import exception.DatabaseException;
 import parser.Token;
-import value.Value;
 
 public class LiteralExp extends Exp {
 	
-	public Value value;
+	private Object value;
 	
-	public LiteralExp(Token tok, Value value) {
+	public LiteralExp(Token tok, Object value) {
 		super(tok);
 		this.value = value;
+if (value instanceof String)
+	System.out.println((String)value);
 	}
+	
+	public Object getValue() {
+		return value;
+	}
+	
+	public static String processStringLiteral(String literal) {
+		StringBuilder sb = new StringBuilder(literal.length());
+		char[] chars = literal.toCharArray();
+		for (int i=1; i<chars.length-1; ++i) {	// ignore surrounding single quotes
+			if (chars[i]=='\\' || chars[i]=='\'') {
+				sb.append('\'');
+				i++;	// skip next char
+			}
+			else {
+				sb.append(chars[i]);
+			}
+		}
+		return sb.toString();
+	}
+	
+	public Object accept(ASTVisitor visitor) throws DatabaseException { return visitor.visit(this); }
 }

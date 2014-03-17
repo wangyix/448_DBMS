@@ -1,5 +1,6 @@
 package ast;
 
+import exception.DatabaseException;
 import parser.Token;
 
 public class BinaryExp extends Exp {
@@ -20,5 +21,5 @@ public class BinaryExp extends Exp {
     
     public void setLeft(Exp left) { this.left = left; }
 
-    public Object accept(ASTVisitor visitor) { return visitor.visit(this); }
+    public Object accept(ASTVisitor visitor) throws DatabaseException { return visitor.visit(this); }
 }

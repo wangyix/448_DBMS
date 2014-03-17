@@ -1,5 +1,6 @@
 package ast;
 
+import exception.DatabaseException;
 import parser.Token;
 
 public class ASTNode {
@@ -16,7 +17,7 @@ public class ASTNode {
 
     public Token getToken() { return tok; }
 
-    public Object accept(ASTVisitor visitor) {
+    public Object accept(ASTVisitor visitor) throws DatabaseException {
         return visitor.visit(this);
     }
 }

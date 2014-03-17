@@ -4,10 +4,10 @@ import java.io.*;
 import database.*;
 import parser.*;
 import ast.*;
-import value.*;
 
 public class FrontEnd {
 	public static void main(String[] args) {
+		
 		
 		
 		// test: read create table commands, write and read back each attribute
@@ -18,6 +18,12 @@ public class FrontEnd {
 				CreateTableCommand command = parser.CreateTable();
 				
 				System.out.println("table name: "+command.getTableName());
+				System.out.println("attributes:");
+				for (Attribute a : command.getAttributes()) {
+					System.out.println("\t"+a.getName());
+					if (a.getConstraint()!=null)
+						System.out.println("\tconstraint: "+a.getConstraint().getExpString());
+				}
 				System.out.println("primary key attr names: ");
 				for (String s : command.getPrimaryKeyAttrNames())
 					System.out.println("\t"+s);

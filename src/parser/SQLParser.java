@@ -4,7 +4,6 @@
         import java.util.*;
         import ast.*;
         import database.*;
-        import value.*;
 
         public class SQLParser implements SQLParserConstants {
 
@@ -447,6 +446,15 @@
     throw new Error("Missing return statement in function");
   }
 
+// Expression from disk *******************************************************
+  final public Exp ExpressionFromDisk() throws ParseException {
+        Exp ret;
+    ret = Expression();
+    jj_consume_token(0);
+          {if (true) return ret;}
+    throw new Error("Missing return statement in function");
+  }
+
 // Expression *****************************************************************
   final public Exp Expression() throws ParseException {
         Exp ret;
@@ -652,7 +660,7 @@
   final public Exp UnaryOp() throws ParseException {
         Exp ret;
         Exp sub;
-        String op;
+        Token op;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case SYM_PLUS:
     case SYM_MINUS:
@@ -668,7 +676,7 @@
         jj_consume_token(-1);
         throw new ParseException();
       }
-                          op = token.image;  Exp.appendToGlobalExpString(token.image);
+                          op = token;  Exp.appendToGlobalExpString(token.image);
       sub = PrimaryExp();
                           ret = new UnaryExp(token, op, sub);
       break;
@@ -693,22 +701,22 @@
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case DECIMAL_LITERAL:
       jj_consume_token(DECIMAL_LITERAL);
-                          ret = new LiteralExp(token, new DecimalValue(Double.parseDouble(token.image)));
+                          ret = new LiteralExp(token, Double.parseDouble(token.image));
                         Exp.appendToGlobalExpString(token.image);
       break;
     case INT_LITERAL:
       jj_consume_token(INT_LITERAL);
-                          ret = new LiteralExp(token, new IntValue(Integer.parseInt(token.image)));
+                          ret = new LiteralExp(token, Integer.parseInt(token.image));
                         Exp.appendToGlobalExpString(token.image);
       break;
     case STRING_LITERAL:
       jj_consume_token(STRING_LITERAL);
-                          ret = new LiteralExp(token, new StringValue(token.image));
+                          ret = new LiteralExp(token, LiteralExp.processStringLiteral(token.image));
                         Exp.appendToGlobalExpString(token.image);
       break;
     case IDENTIFIER:
       jj_consume_token(IDENTIFIER);
-                          ret = new AttributeExp(token, token.image);
+                         ret = new AttributeExp(token, token.image);
                         Exp.appendToGlobalExpString(token.image);
       break;
     case 48:
@@ -741,11 +749,6 @@
     finally { jj_save(1, xla); }
   }
 
-  private boolean jj_3_2() {
-    if (jj_3R_15()) return true;
-    return false;
-  }
-
   private boolean jj_3_1() {
     if (jj_3R_14()) return true;
     return false;
@@ -760,6 +763,11 @@
   private boolean jj_3R_15() {
     if (jj_scan_token(KW_HELP)) return true;
     if (jj_scan_token(KW_DESCRIBE)) return true;
+    return false;
+  }
+
+  private boolean jj_3_2() {
+    if (jj_3R_15()) return true;
     return false;
   }
 

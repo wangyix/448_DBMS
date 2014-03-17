@@ -3,7 +3,6 @@ package parser;
 import java.util.*;
 import ast.*;
 import database.*;
-import value.*;
 
 /** Token Manager. */
 public class SQLParserTokenManager implements SQLParserConstants

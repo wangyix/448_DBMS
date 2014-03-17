@@ -1,5 +1,6 @@
 package ast;
 
+import exception.DatabaseException;
 import parser.Token;
 
 public class HelpCommandCommand extends Command {
@@ -17,5 +18,5 @@ public class HelpCommandCommand extends Command {
 	
 	public Type getType() { return type; }
 	
-	public Object accept(ASTVisitor visitor) { return visitor.visit(this); }
+	public Object accept(ASTVisitor visitor) throws DatabaseException { return visitor.visit(this); }
 }

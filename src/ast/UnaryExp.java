@@ -1,12 +1,13 @@
 package ast;
 
+import exception.DatabaseException;
 import parser.Token;
 
 public class UnaryExp extends Exp {
-	String op;
+	Token op;
 	Exp sub;
     
-    public UnaryExp(Token tok, String op, Exp sub) {
+    public UnaryExp(Token tok, Token op, Exp sub) {
         super(tok);
         this.op = op;
         this.sub = sub;
@@ -14,6 +15,7 @@ public class UnaryExp extends Exp {
 
     //@Override public ASTNode[] children() { return new ASTNode[]{sub}; }
     public Exp getSub() { return sub; }
-
-    public Object accept(ASTVisitor visitor) { return visitor.visit(this); }
+    public Token getOp() { return op; }
+    
+    public Object accept(ASTVisitor visitor) throws DatabaseException { return visitor.visit(this); }
 }

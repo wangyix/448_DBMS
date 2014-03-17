@@ -9,7 +9,6 @@ PARSER_BEGIN(SQLParser)
 	import java.util.*;
 	import ast.*;
 	import database.*;
-	import value.*;
 
 	public class SQLParser {
 
@@ -89,7 +88,9 @@ TOKEN:
 {
 	< INT_LITERAL: (["0"-"9"])+ >
 |	< DECIMAL_LITERAL: (["0"-"9"])*"."(["0"-"9"])+ >
-|	< STRING_LITERAL: "'"(~["\\","'"]|"''"|"\\'")*"'" >	// ??? might be wrong
+|	< STRING_LITERAL: "'"(~["\\","'"]|"''"|"\\'")*"'" >
+	// does not include the surrounding single quotes
+	// does not allow escapes except for escaping a single quote
 }
 
 
@@ -361,8 +362,16 @@ QuitCommand Quit():
 }
 
 
+// Expression from disk *******************************************************
 
-
+Exp ExpressionFromDisk():
+{
+	Exp ret;
+}
+{
+	( ret = Expression() ) < EOF >
+	{ return ret; }
+}	
 
 // Expression *****************************************************************
 
@@ -500,13 +509,13 @@ Exp UnaryOp():
 {
 	Exp ret;
 	Exp sub;
-	String op;
+	Token op;
 	//System.out.println("UnaryOp()");
 }
 {
 	(		(			
 			( < SYM_PLUS > | < SYM_MINUS > )
-			{ op = token.image;  Exp.appendToGlobalExpString(token.image); }					( sub = PrimaryExp() )
+			{ op = token;  Exp.appendToGlobalExpString(token.image); }					( sub = PrimaryExp() )
 			{ ret = new UnaryExp(token, op, sub); }
 		)
 	|	(
@@ -526,22 +535,23 @@ Exp PrimaryExp():
 	(
 		(
 			< DECIMAL_LITERAL >	// put this before INT_LITERAL since INT_LITERAL is a substring
-			{ ret = new LiteralExp(token, new DecimalValue(Double.parseDouble(token.image)));
+			{ ret = new LiteralExp(token, Double.parseDouble(token.image));
 			Exp.appendToGlobalExpString(token.image); }
 		)
 	|	(
 			< INT_LITERAL >
-			{ ret = new LiteralExp(token, new IntValue(Integer.parseInt(token.image)));
+			{ ret = new LiteralExp(token, Integer.parseInt(token.image));
 			Exp.appendToGlobalExpString(token.image); }
 		)
 	|	(
-			< STRING_LITERAL >
-			{ ret = new LiteralExp(token, new StringValue(token.image));
-			Exp.appendToGlobalExpString(token.image); }
+			< STRING_LITERAL > 
+			{ ret = new LiteralExp(token, LiteralExp.processStringLiteral(token.image));
+			Exp.appendToGlobalExpString(token.image);
+			}
 		)
 	|	(
 			< IDENTIFIER >
-			{ ret = new AttributeExp(token, token.image);
+			{ret = new AttributeExp(token, token.image);
 			Exp.appendToGlobalExpString(token.image); }
 		)
 	|	(

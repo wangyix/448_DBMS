@@ -2,6 +2,7 @@ package ast;
 
 import java.util.*;
 
+import exception.DatabaseException;
 import parser.Token;
 
 public class SelectCommand extends Command {
@@ -28,5 +29,5 @@ public class SelectCommand extends Command {
 		return conditions;
 	}
 	
-	public Object accept(ASTVisitor visitor) { return visitor.visit(this); }
+	public Object accept(ASTVisitor visitor) throws DatabaseException { return visitor.visit(this); }
 }
