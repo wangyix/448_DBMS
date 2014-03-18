@@ -2,13 +2,14 @@ package ast;
 
 import java.util.*;
 
+import astvisitor.ASTVisitor;
 import exception.DatabaseException;
 import parser.Token;
 
 public class SelectCommand extends Command {
-	private List<AttributeExp> attributes;	// empty means SELECT *
+	private List<AttributeExp> attributes;	// null means SELECT *
 	private List<String> tables;
-	private Exp conditions;
+	private Exp conditions;					// null means select all rows
 	
 	public SelectCommand(Token tok, List<AttributeExp> attributes, List<String> tables, Exp conditions) {
 		super(tok);

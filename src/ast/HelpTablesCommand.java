@@ -1,5 +1,6 @@
 package ast;
 
+import astvisitor.ASTVisitor;
 import exception.DatabaseException;
 import parser.Token;
 

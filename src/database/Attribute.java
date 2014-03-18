@@ -2,9 +2,11 @@ package database;
 
 import java.io.*;
 
+import exception.DatabaseException;
 import parser.ParseException;
 import parser.SQLParser;
 import ast.*;
+import astvisitor.AttrConstraintTypeChecker;
 
 public class Attribute implements Serializable{
 
@@ -20,20 +22,52 @@ public class Attribute implements Serializable{
 	private int length;					// only used for type CHAR
 	private transient Exp constraint;	// cannot reference other attributes
 	
+	private transient int printWidth;
 	
 	
-	public Attribute(int position, String name, Type type, Exp constraint) {
-		this(position, name, type, -1, constraint);
-	}
-	
-	public Attribute(int position, String name, Type type, int length, Exp constraint) {
+	public Attribute(int position, CreateTableCommand.AttributeDescriptor attrDescriptor)
+			throws DatabaseException {
+		
+		// make sure constraint references this attribute but not others
+		// also make sure this constraint evaluates to a boolean
+		AttrConstraintTypeChecker.check(attrDescriptor);
+		
 		this.position = position;
-		this.name = name;
-		this.type = type;
-		this.length = length;
-		this.constraint = constraint;
+		this.name = attrDescriptor.getName();
+		this.type = attrDescriptor.getType();
+		this.length = attrDescriptor.getLength();
+		this.constraint = attrDescriptor.getConstraint();
+		
+		computePrintWidth();
 	}
 	
+	
+	private void computePrintWidth() {
+		switch (type) {		// compute print width
+		case INT:
+		case DECIMAL:
+			printWidth = 10;
+			break;
+		case CHAR:
+			printWidth = length;
+			break;
+		}
+		printWidth = Math.max(printWidth, name.length());
+	}
+	
+	public void print() {
+		switch (type) {
+		case INT:
+		case DECIMAL:
+			// right justify
+			System.out.format("%"+printWidth+"s", name);
+			break;
+		case CHAR:
+			// left justify
+			System.out.format("%-"+printWidth+"s", name);
+			break;
+		}
+	}
 	
 	
 	private void writeObject(ObjectOutputStream oos) throws IOException {
@@ -59,7 +93,10 @@ public class Attribute implements Serializable{
 				throw new IOException("Attribute constraint expression corrupted in disk.");
 			}
 		}
+		computePrintWidth();
 	}
+	
+	
 	
 	public int getPosition() {
 		return position;
@@ -79,5 +116,9 @@ public class Attribute implements Serializable{
 
 	public Exp getConstraint() {
 		return constraint;
+	}
+	
+	public int getPrintWidth() {
+		return printWidth;
 	}
 }

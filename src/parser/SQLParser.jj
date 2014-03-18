@@ -101,17 +101,18 @@ Command Command():
 	Command ret;
 	//System.out.println("Command()");
 }
-{	ret = CreateTable()
-|	ret = DropTable()
-|	ret = Select()
-|	ret = Insert()
-|	ret = Delete()
-|	ret = Update()
-|	LOOKAHEAD(2) ret = HelpTables()
-|	LOOKAHEAD(2) ret = HelpDescribe()
-|	ret = HelpCommand()
-|	ret = Quit()
-	
+{
+	(		ret = CreateTable()
+	|	ret = DropTable()
+	|	ret = Select()
+	|	ret = Insert()
+	|	ret = Delete()
+	|	ret = Update()
+	|	LOOKAHEAD(2) ret = HelpTables()
+	|	LOOKAHEAD(2) ret = HelpDescribe()
+	|	ret = HelpCommand()
+	|	ret = Quit()
+	)
 	{ return ret; }
 }
 
@@ -119,13 +120,13 @@ Command Command():
 CreateTableCommand CreateTable():
 {
 	String tableName;
-	List<Attribute> attributes = new ArrayList<Attribute>();
+	List<CreateTableCommand.AttributeDescriptor> attributeDescriptors
+			= new ArrayList<CreateTableCommand.AttributeDescriptor>();
 	List<String> primaryKeyAttrNames = new ArrayList<String>();
 	List<CreateTableCommand.ForeignKeyDescriptor> foreignKeyDescriptors
 		 = new ArrayList<CreateTableCommand.ForeignKeyDescriptor>();
 
-	int position = 0;
-	Attribute attribute;
+	CreateTableCommand.AttributeDescriptor attributeDescriptor;
 	CreateTableCommand.ForeignKeyDescriptor foreignKeyDescriptor;
 	
 	//System.out.println("CreateTable()");
@@ -136,8 +137,8 @@ CreateTableCommand CreateTable():
 	"("
 	(
 		(
-			( attribute = AttrDecl(position) ) ","
-			{ attributes.add(attribute); position++; }
+			( attributeDescriptor = AttrDecl() ) ","
+			{ attributeDescriptors.add(attributeDescriptor); }
 		)+
 		(			< KW_PRIMARY > < KW_KEY >
 			"("
@@ -148,11 +149,11 @@ CreateTableCommand CreateTable():
 			"," ( foreignKeyDescriptor = ForeignKeyDecl() )
 			{ foreignKeyDescriptors.add(foreignKeyDescriptor); }
 		)*	)
-	");"	{ return new CreateTableCommand(token, tableName, attributes,
+	");"	{ return new CreateTableCommand(token, tableName, attributeDescriptors,
 					primaryKeyAttrNames, foreignKeyDescriptors); }
 }
 
-Attribute AttrDecl(int position):
+CreateTableCommand.AttributeDescriptor AttrDecl():
 {
 	String name;
 	Attribute.Type type;
@@ -176,7 +177,7 @@ Attribute AttrDecl(int position):
 		"(" (
 				constraint = Expression()
 		) ")"	)?
-	{ return new Attribute(position, name, type, length, constraint); }}
+	{ return new CreateTableCommand.AttributeDescriptor(name, type, length, constraint); }}
 
 CreateTableCommand.ForeignKeyDescriptor ForeignKeyDecl():
 {	String refTableName;
@@ -201,27 +202,36 @@ CreateTableCommand.ForeignKeyDescriptor ForeignKeyDecl():
 // DROP TABLE table -----------------------------------------------------------
 DropTableCommand DropTable():
 {
+	DropTableCommand ret;
 	//System.out.println("DropTable()");
 }
 {
-	< KW_DROP > < KW_TABLE > < IDENTIFIER > ";"
-	{ return new DropTableCommand(token, token.image); }
+	< KW_DROP > < KW_TABLE > < IDENTIFIER >
+	{ ret = new DropTableCommand(token, token.image); }
+	";"
+	{ return ret; }
 }
 
 
 // SELECT attr0,... FROM table0,... WHERE conditions --------------------------
 SelectCommand Select():
 {
-	List<AttributeExp> attributes = new ArrayList<AttributeExp>();
+	List<AttributeExp> attributes = null;
 	List<String> tables = new ArrayList<String>();
-	Exp conditions;
+	Exp condition = null;
 
 	//System.out.println("Select()");
 }
 {
 	< KW_SELECT >
 	(	
-		(			( < IDENTIFIER > { attributes.add(new AttributeExp(token, token.image)); } )
+		(			(
+				< IDENTIFIER >
+				{
+					attributes = new ArrayList<AttributeExp>();
+					attributes.add(new AttributeExp(token, token.image));
+				}
+			)
 			( "," < IDENTIFIER > { attributes.add(new AttributeExp(token, token.image)); } )*
 		)
 	|	< SYM_STAR >
@@ -229,8 +239,9 @@ SelectCommand Select():
 	< KW_FROM >
 	( < IDENTIFIER > { tables.add(token.image); } )
 	( "," < IDENTIFIER > { tables.add(token.image); } )*
-	< KW_WHERE > ( conditions = Expression() ) ";"
-	{ return new SelectCommand(token, attributes, tables, conditions); }
+	( < KW_WHERE > ( condition = Expression() ) )?
+	";"
+	{ return new SelectCommand(token, attributes, tables, condition); }
 }
 
 
@@ -307,11 +318,14 @@ HelpTablesCommand HelpTables():
 // HELP DESCRIBE table --------------------------------------------------------
 HelpDescribeCommand HelpDescribe():
 {
+	HelpDescribeCommand ret;
 	//System.out.println("HelpDescribe()");
 }
 {
-	< KW_HELP > < KW_DESCRIBE > < IDENTIFIER > ";"
-	{ return new HelpDescribeCommand(token, token.image); }
+	< KW_HELP > < KW_DESCRIBE > < IDENTIFIER >
+	{ ret = new HelpDescribeCommand(token, token.image); }
+	";"
+	{ return ret; }
 }
 
 

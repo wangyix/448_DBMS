@@ -2,6 +2,7 @@ package ast;
 
 import java.util.*;
 
+import astvisitor.ASTVisitor;
 import exception.DatabaseException;
 import parser.Token;
 

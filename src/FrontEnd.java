@@ -2,14 +2,43 @@
 import java.io.*;
 
 import database.*;
+import exception.DatabaseException;
 import parser.*;
 import ast.*;
+import astvisitor.CommandExecutor;
 
 public class FrontEnd {
 	public static void main(String[] args) {
 		
+
+		SQLParser parser = new SQLParser(System.in);
+		Command command;
+		
+		while(true) {
+			System.out.print("SQL> ");
+			try {
+				command = parser.Command();
+			} catch (ParseException e) {
+				System.out.println(e.getMessage());
+				continue;
+			}
+			try {
+				CommandExecutor.execute(command);
+			} catch (DatabaseException e) {
+				System.out.println("Database error:");
+				System.out.println(e.getMessage());
+			}
+			System.out.println("");
+			
+			for (Table t : Database.getTables()) {
+				t.print();
+				System.out.println("");
+			}
+		}
 		
 		
+		
+		/*
 		// test: read create table commands, write and read back each attribute
 		SQLParser parser = new SQLParser(System.in);
 		try {
@@ -65,5 +94,6 @@ public class FrontEnd {
 			System.out.println(ex.getMessage());
 			return;
 		}
+		*/
 	}
 }

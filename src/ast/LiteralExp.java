@@ -1,5 +1,6 @@
 package ast;
 
+import astvisitor.ASTVisitor;
 import exception.DatabaseException;
 import parser.Token;
 
@@ -10,8 +11,6 @@ public class LiteralExp extends Exp {
 	public LiteralExp(Token tok, Object value) {
 		super(tok);
 		this.value = value;
-if (value instanceof String)
-	System.out.println((String)value);
 	}
 	
 	public Object getValue() {

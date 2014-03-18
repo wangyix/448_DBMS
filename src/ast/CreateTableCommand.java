@@ -2,17 +2,17 @@ package ast;
 
 import java.util.*;
 
+import astvisitor.ASTVisitor;
 import database.Attribute;
 import exception.DatabaseException;
 import parser.Token;
 
 public class CreateTableCommand extends Command {
 	
-	public static class ForeignKeyDescriptor{
+	public static class ForeignKeyDescriptor {
 		private String refTableName;
 		List<String> localAttrNames;
 		List<String> refAttrNames;
-		
 		public ForeignKeyDescriptor(String refTableName, List<String> localAttrNames,
 				List<String> refAttrNames) {
 			this.refTableName = refTableName;
@@ -30,17 +30,46 @@ public class CreateTableCommand extends Command {
 		}
 	}
 	
+	public static class AttributeDescriptor {
+		private String name;
+		private Attribute.Type type;
+		private int length;			// only used for type CHAR
+		private Exp constraint;
+		public AttributeDescriptor(String name, Attribute.Type type,
+				int length, Exp constraint) {
+			this.name = name;
+			this.type = type;
+			this.length = length;
+			this.constraint = constraint;
+		}
+		public String getName() {
+			return name;
+		}
+		public Attribute.Type getType() {
+			return type;
+		}
+		public int getLength() {
+			return length;
+		}
+		public Exp getConstraint() {
+			return constraint;
+		}
+	}
+	
+	
 	private String tableName;
-	private List<Attribute> attributes;
+	private List<AttributeDescriptor> attributeDescriptors;
 	private List<String> primaryKeyAttrNames;
 	private List<ForeignKeyDescriptor> foreignKeyDescriptors;
 		
 	
-	public CreateTableCommand(Token tok, String tableName, List<Attribute> attributes, 
-			List<String> primaryKeyAttrNames, List<ForeignKeyDescriptor> foreignKeyDescriptors) {
+	public CreateTableCommand(Token tok, String tableName,
+			List<AttributeDescriptor> attributeDescriptors, 
+			List<String> primaryKeyAttrNames,
+			List<ForeignKeyDescriptor> foreignKeyDescriptors) {
 		super(tok);
 		this.tableName = tableName;
-		this.attributes = attributes;
+		this.attributeDescriptors = attributeDescriptors;
 		this.primaryKeyAttrNames = primaryKeyAttrNames;
 		this.foreignKeyDescriptors = foreignKeyDescriptors;
 	}
@@ -50,8 +79,8 @@ public class CreateTableCommand extends Command {
 	public String getTableName() {
 		return tableName;
 	}
-	public List<Attribute> getAttributes() {
-		return attributes;
+	public List<AttributeDescriptor> getAttributeDescriptors() {
+		return attributeDescriptors;
 	}
 	public List<String> getPrimaryKeyAttrNames() {
 		return primaryKeyAttrNames;
