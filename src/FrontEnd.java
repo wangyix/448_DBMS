@@ -10,26 +10,50 @@ import astvisitor.CommandExecutor;
 public class FrontEnd {
 	public static void main(String[] args) {
 		
-
 		SQLParser parser = new SQLParser(System.in);
 		Command command;
 		
 		while(true) {
+			
+			
 			System.out.print("SQL> ");
+			
+			// parse command
 			try {
 				command = parser.Command();
-			} catch (ParseException e) {
+				//parser.ReInit(System.in);
+				
+				System.out.println("");
+			}
+			catch (ParseException e) {
+				parser.ReInit(System.in);
+				
+				System.out.println("");
 				System.out.println(e.getMessage());
+				System.out.println("");
 				continue;
 			}
+			catch (TokenMgrError e) {
+				parser.ReInit(System.in);
+				
+				System.out.println("");
+				System.out.println(e.getMessage());
+				System.out.println("");
+				continue;
+			}
+			
+			// execute command
 			try {
 				CommandExecutor.execute(command);
+				System.out.println("");
 			} catch (DatabaseException e) {
 				System.out.println("Database error:");
 				System.out.println(e.getMessage());
+				System.out.println("");
+				continue;
 			}
-			System.out.println("");
-			
+						
+			// TEST: print all tables
 			for (Table t : Database.getTables()) {
 				t.print();
 				System.out.println("");

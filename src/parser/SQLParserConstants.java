@@ -144,11 +144,10 @@ public interface SQLParserConstants {
     "<INT_LITERAL>",
     "<DECIMAL_LITERAL>",
     "<STRING_LITERAL>",
+    "\";\"",
     "\"(\"",
     "\",\"",
     "\")\"",
-    "\");\"",
-    "\";\"",
   };
 
 }

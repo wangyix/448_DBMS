@@ -1,7 +1,5 @@
 package astvisitor;
 
-import java.util.*;
-
 import database.*;
 import exception.DatabaseException;
 import ast.AttributeExp;
@@ -13,11 +11,11 @@ import astvisitor.ASTVisitor.SimpleASTVisitor;
 
 public class ExpEvaluator extends SimpleASTVisitor {
 	
-	private static List<Tuple> tuples;			// no two tuples from same table, use null for literals only
-	private static ExpEvaluator visitor;		// singleton
+	private static TupleWithSchema[] tuples;	// no two tuples from same table, use null for literals only
+	private static ExpEvaluator visitor;			// singleton
 	
 	
-	public static Object evaluate(Exp exp, List<Tuple> referencedTuples)
+	public static Object evaluate(Exp exp, TupleWithSchema[] referencedTuples)
 			throws DatabaseException {
 		
 		if (visitor==null)
@@ -37,7 +35,7 @@ public class ExpEvaluator extends SimpleASTVisitor {
 		
 		Object ret = null;
 		
-		// tuples can be null if the expression can only reference literals
+		// tuples can be null if the expression can only reference literals (for INSERT)
 		if (tuples == null) {
 			throw new DatabaseException("Attributes cannot be referenced when specifying a value.");
 		}
@@ -45,12 +43,12 @@ public class ExpEvaluator extends SimpleASTVisitor {
 		// find this attribute's position and containing tuple
 		String attrName = node.getName();
 		boolean attrFound = false;
-		for (Tuple t : tuples) {
-			Integer position = t.getParentTable().getSchema()
+		for (TupleWithSchema tws : tuples) {
+			Integer position = tws.getParentSchema()
 							.getAttributePosition(attrName);
 			if (position != null) {
 				attrFound = true;
-				ret = t.getValueAt(position);
+				ret = tws.getTuple().getValueAt(position);
 				break;
 			}
 		}
@@ -76,8 +74,8 @@ public class ExpEvaluator extends SimpleASTVisitor {
 		boolean rightIsNumber = rightIsInt || right instanceof Double;
 		
 		if (leftIsInt && rightIsInt) {
-			int l = (int)left;
-			int r = (int)right;
+			int l = ((Integer)left).intValue();
+			int r = ((Integer)right).intValue();
 			if (op.equals("<")) {
                 ret = (l < r);
             } else if (op.equals("<=")) {
@@ -103,8 +101,8 @@ public class ExpEvaluator extends SimpleASTVisitor {
             }
 		}
 		else if (leftIsNumber && rightIsNumber) {
-			double l = (double)left;
-			double r = (double)right;
+			double l = ((Double)left).doubleValue();
+			double r = ((Double)right).doubleValue();
 			if (op.equals("<")) {
                 ret = (l < r);
             } else if (op.equals("<=")) {
@@ -150,8 +148,8 @@ public class ExpEvaluator extends SimpleASTVisitor {
             }
 		}
 		else if (left instanceof Boolean && right instanceof Boolean) {
-			boolean l = (boolean)left;
-			boolean r = (boolean)right;
+			boolean l = ((Boolean)left).booleanValue();
+			boolean r = ((Boolean)right).booleanValue();
 			op = op.toUpperCase();	// important!!
 			if (op.equals("AND")) {
 				ret = l && r;

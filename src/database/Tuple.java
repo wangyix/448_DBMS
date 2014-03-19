@@ -8,21 +8,22 @@ public class Tuple implements Serializable {
 
 	private static final long serialVersionUID = 9016548390245302552L;
 	
-	private Table parentTable;
-	private List<Object> values;
+	//private Table parentTable;
+	private Object[] values;
 	
-	public Tuple(Table parentTable) {
-		this.parentTable = parentTable;
-		values = new ArrayList<Object>();
+	public Tuple(List<Object> valuesList) {
+		values = valuesList.toArray();
 	}
 	
+	public Tuple(Object[] values) {
+		this.values = values;
+	}
 	
-	public void print() {
-		Schema schema = parentTable.getSchema();
-		for (int i=0; i<values.size(); ++i) {
-			Attribute attribute = schema.getAttribute(i);
+	public void print(Schema parentSchema) {
+		for (int i=0; i<values.length; ++i) {
+			Attribute attribute = parentSchema.getAttribute(i);
 			int printWidth = attribute.getPrintWidth();
-			Object value = values.get(i);
+			Object value = values.length;
 			switch (attribute.getType()) {
 			case INT:		// right justify
 				System.out.format("%"+printWidth+"d", (int)value);
@@ -39,25 +40,18 @@ public class Tuple implements Serializable {
 				System.out.format("%-"+printWidth+"s", (String)value);
 				break;
 			}
-			if (i != values.size()-1)
+			if (i != values.length-1)
 				System.out.print(" ");
 		}
 		System.out.println("");
 	}
 	
-	public void append(Object v) {
-		values.add(v);
-	}
-		
-	public Table getParentTable() {
-		return parentTable;
-	}
 	
-	public List<Object> getValues() {
+	public Object[] getValues() {
 		return values;
 	}
 	
 	public Object getValueAt(int position) {
-		return values.get(position);
+		return values[position];
 	}
 }

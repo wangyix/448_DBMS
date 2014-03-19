@@ -5,9 +5,9 @@ import ast.AttributeAssign;
 import ast.AttributeExp;
 import ast.BinaryExp;
 import ast.Command;
-import ast.CreateTableCommand;
+import ast.CreateCommand;
 import ast.DeleteCommand;
-import ast.DropTableCommand;
+import ast.DropCommand;
 import ast.Exp;
 import ast.HelpCommandCommand;
 import ast.HelpDescribeCommand;
@@ -27,9 +27,9 @@ public abstract class ASTVisitor {
 	public abstract Object visit(AttributeExp node) throws DatabaseException;
 	public abstract Object visit(BinaryExp node) throws DatabaseException;
 	public abstract Object visit(Command node) throws DatabaseException;
-	public abstract Object visit(CreateTableCommand node) throws DatabaseException;
+	public abstract Object visit(CreateCommand node) throws DatabaseException;
 	public abstract Object visit(DeleteCommand node) throws DatabaseException;
-	public abstract Object visit(DropTableCommand node) throws DatabaseException;
+	public abstract Object visit(DropCommand node) throws DatabaseException;
 	public abstract Object visit(Exp node) throws DatabaseException;
 	public abstract Object visit(HelpCommandCommand node) throws DatabaseException;
 	public abstract Object visit(HelpDescribeCommand node) throws DatabaseException;
@@ -51,9 +51,9 @@ public abstract class ASTVisitor {
 		@Override public Object visit(AttributeExp node)  throws DatabaseException { return defaultVisit(node); }
 		@Override public Object visit(BinaryExp node)  throws DatabaseException { return defaultVisit(node); }
 		@Override public Object visit(Command node)  throws DatabaseException { return defaultVisit(node); }
-		@Override public Object visit(CreateTableCommand node)  throws DatabaseException { return defaultVisit(node); }
+		@Override public Object visit(CreateCommand node)  throws DatabaseException { return defaultVisit(node); }
 		@Override public Object visit(DeleteCommand node)  throws DatabaseException { return defaultVisit(node); }
-		@Override public Object visit(DropTableCommand node) throws DatabaseException { return defaultVisit(node); }
+		@Override public Object visit(DropCommand node) throws DatabaseException { return defaultVisit(node); }
 		@Override public Object visit(Exp node) throws DatabaseException { return defaultVisit(node); }
 		@Override public Object visit(HelpCommandCommand node) throws DatabaseException { return defaultVisit(node); }
 		@Override public Object visit(HelpDescribeCommand node) throws DatabaseException { return defaultVisit(node); }

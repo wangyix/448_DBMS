@@ -80,7 +80,7 @@ TOKEN:
 // SQL identifiers
 TOKEN:
 {
-	< IDENTIFIER: ["a"-"z","A"-"Z"](["_","0"-"9","a"-"z","A"-"Z"])* >
+	< IDENTIFIER: ["a"-"z", "A"-"Z"](["_", "0"-"9", "a"-"z", "A"-"Z"])* >
 }
 
 // literals
@@ -88,10 +88,15 @@ TOKEN:
 {
 	< INT_LITERAL: (["0"-"9"])+ >
 |	< DECIMAL_LITERAL: (["0"-"9"])*"."(["0"-"9"])+ >
-|	< STRING_LITERAL: "'"(~["\\","'"]|"''"|"\\'")*"'" >
-	// does not include the surrounding single quotes
+|	< STRING_LITERAL: "'"(~["\\", "'"]|"''"|"\\'")*"'" >
 	// does not allow escapes except for escaping a single quote
 }
+/*
+TOKEN:
+{	< COMMAND_FOLLOW: ";"([" ", "\t", "\f", "\r"])*"\n" >
+|	< COMMAND_FOLLOW_ERROR: ";"(~["\n"])*"\n" >
+}
+*/
 
 
 // Grammar --------------------------------------------------------------------
@@ -108,26 +113,30 @@ Command Command():
 	|	ret = Insert()
 	|	ret = Delete()
 	|	ret = Update()
-	|	LOOKAHEAD(2) ret = HelpTables()
-	|	LOOKAHEAD(2) ret = HelpDescribe()
-	|	ret = HelpCommand()
+	|	< KW_HELP >
+		(
+			ret = HelpTables_suffix()
+		|	ret = HelpDescribe_suffix()
+		|	ret = HelpCommand_suffix()
+		)
 	|	ret = Quit()
 	)
+	";"
 	{ return ret; }
 }
 
 // CREATE TABLE ( ... ) -------------------------------------------------------
-CreateTableCommand CreateTable():
+CreateCommand CreateTable():
 {
 	String tableName;
-	List<CreateTableCommand.AttributeDescriptor> attributeDescriptors
-			= new ArrayList<CreateTableCommand.AttributeDescriptor>();
+	List<CreateCommand.AttributeDescriptor> attributeDescriptors
+			= new ArrayList<CreateCommand.AttributeDescriptor>();
 	List<String> primaryKeyAttrNames = new ArrayList<String>();
-	List<CreateTableCommand.ForeignKeyDescriptor> foreignKeyDescriptors
-		 = new ArrayList<CreateTableCommand.ForeignKeyDescriptor>();
+	List<CreateCommand.ForeignKeyDescriptor> foreignKeyDescriptors
+		 = new ArrayList<CreateCommand.ForeignKeyDescriptor>();
 
-	CreateTableCommand.AttributeDescriptor attributeDescriptor;
-	CreateTableCommand.ForeignKeyDescriptor foreignKeyDescriptor;
+	CreateCommand.AttributeDescriptor attributeDescriptor;
+	CreateCommand.ForeignKeyDescriptor foreignKeyDescriptor;
 	
 	//System.out.println("CreateTable()");
 }
@@ -149,11 +158,11 @@ CreateTableCommand CreateTable():
 			"," ( foreignKeyDescriptor = ForeignKeyDecl() )
 			{ foreignKeyDescriptors.add(foreignKeyDescriptor); }
 		)*	)
-	");"	{ return new CreateTableCommand(token, tableName, attributeDescriptors,
+	")"	{ return new CreateCommand(token, tableName, attributeDescriptors,
 					primaryKeyAttrNames, foreignKeyDescriptors); }
 }
 
-CreateTableCommand.AttributeDescriptor AttrDecl():
+CreateCommand.AttributeDescriptor AttrDecl():
 {
 	String name;
 	Attribute.Type type;
@@ -177,9 +186,9 @@ CreateTableCommand.AttributeDescriptor AttrDecl():
 		"(" (
 				constraint = Expression()
 		) ")"	)?
-	{ return new CreateTableCommand.AttributeDescriptor(name, type, length, constraint); }}
+	{ return new CreateCommand.AttributeDescriptor(name, type, length, constraint); }}
 
-CreateTableCommand.ForeignKeyDescriptor ForeignKeyDecl():
+CreateCommand.ForeignKeyDescriptor ForeignKeyDecl():
 {	String refTableName;
 	List<String> localAttrNames = new ArrayList<String>();
 	List<String> refAttrNames = new ArrayList<String>();
@@ -196,19 +205,18 @@ CreateTableCommand.ForeignKeyDescriptor ForeignKeyDecl():
 	( < IDENTIFIER > { refAttrNames.add(token.image); } )
 	( "," < IDENTIFIER > { refAttrNames.add(token.image); } )*
 	")"
-	{ return new CreateTableCommand.ForeignKeyDescriptor(
+	{ return new CreateCommand.ForeignKeyDescriptor(
 		refTableName, localAttrNames, refAttrNames); }}
 
 // DROP TABLE table -----------------------------------------------------------
-DropTableCommand DropTable():
+DropCommand DropTable():
 {
-	DropTableCommand ret;
+	DropCommand ret;
 	//System.out.println("DropTable()");
 }
 {
 	< KW_DROP > < KW_TABLE > < IDENTIFIER >
-	{ ret = new DropTableCommand(token, token.image); }
-	";"
+	{ ret = new DropCommand(token, token.image); }
 	{ return ret; }
 }
 
@@ -216,7 +224,7 @@ DropTableCommand DropTable():
 // SELECT attr0,... FROM table0,... WHERE conditions --------------------------
 SelectCommand Select():
 {
-	List<AttributeExp> attributes = null;
+	List<String> attrNames = null;
 	List<String> tables = new ArrayList<String>();
 	Exp condition = null;
 
@@ -228,11 +236,11 @@ SelectCommand Select():
 		(			(
 				< IDENTIFIER >
 				{
-					attributes = new ArrayList<AttributeExp>();
-					attributes.add(new AttributeExp(token, token.image));
+					attrNames = new ArrayList<String>();
+					attrNames.add(token.image);
 				}
 			)
-			( "," < IDENTIFIER > { attributes.add(new AttributeExp(token, token.image)); } )*
+			( "," < IDENTIFIER > { attrNames.add(token.image); } )*
 		)
 	|	< SYM_STAR >
 	)
@@ -240,8 +248,7 @@ SelectCommand Select():
 	( < IDENTIFIER > { tables.add(token.image); } )
 	( "," < IDENTIFIER > { tables.add(token.image); } )*
 	( < KW_WHERE > ( condition = Expression() ) )?
-	";"
-	{ return new SelectCommand(token, attributes, tables, condition); }
+	{ return new SelectCommand(token, attrNames, tables, condition); }
 }
 
 
@@ -260,7 +267,7 @@ InsertCommand Insert():
 	< KW_VALUES > "("
 	( ( value = Expression() ) { values.add(value); } )
 	( "," ( value = Expression() ) { values.add(value); } )*
-	");"
+	")"
 	{ return new InsertCommand(token, table, values); }
 }
 
@@ -274,7 +281,7 @@ DeleteCommand Delete():
 }
 {
 	< KW_DELETE > < KW_FROM >	< IDENTIFIER > { table = token.image; }
-	< KW_WHERE > ( conditions = Expression() ) ";"
+	< KW_WHERE > ( conditions = Expression() )
 	{ return new DeleteCommand(token, table, conditions); }
 }
 
@@ -292,7 +299,7 @@ UpdateCommand Update():
 }
 {
 	< KW_UPDATE > < IDENTIFIER > { table = token.image; }	< KW_SET > ( ( assignment = AttributeAssignr() ) { assignments.add(assignment); } )	( "," ( assignment = AttributeAssignr() ) { assignments.add(assignment); } )*
-	< KW_WHERE > ( conditions = Expression() ) ";"
+	< KW_WHERE > ( conditions = Expression() )
 	{ return new UpdateCommand(token, table, assignments, conditions); }
 }
 
@@ -307,36 +314,34 @@ AttributeAssign AttributeAssignr():
 
 
 // HELP TABLES ----------------------------------------------------------------
-HelpTablesCommand HelpTables():
+HelpTablesCommand HelpTables_suffix():
 {
 	//System.out.println("HelpTables()");
 }
 {
-	< KW_HELP > < KW_TABLES > ";"	{ return new HelpTablesCommand(token); }
+	< KW_TABLES >	{ return new HelpTablesCommand(token); }
 }
 
 // HELP DESCRIBE table --------------------------------------------------------
-HelpDescribeCommand HelpDescribe():
+HelpDescribeCommand HelpDescribe_suffix():
 {
 	HelpDescribeCommand ret;
 	//System.out.println("HelpDescribe()");
 }
 {
-	< KW_HELP > < KW_DESCRIBE > < IDENTIFIER >
+	< KW_DESCRIBE > < IDENTIFIER >
 	{ ret = new HelpDescribeCommand(token, token.image); }
-	";"
 	{ return ret; }
 }
 
 
 // HELP command ---------------------------------------------------------------
-HelpCommandCommand HelpCommand():
+HelpCommandCommand HelpCommand_suffix():
 {
 	HelpCommandCommand.Type type;
 	//System.out.println("HelpCommand()");
 }
 {
-	< KW_HELP >
 	(
 		(			< KW_CREATE > < KW_TABLE >
 			{ type = HelpCommandCommand.Type.CREATE_TABLE; }
@@ -361,7 +366,7 @@ HelpCommandCommand HelpCommand():
 			< KW_UPDATE >
 			{ type = HelpCommandCommand.Type.UPDATE; }
 		)
-	) ";"
+	)
 	{ return new HelpCommandCommand(token, type); }
 }
 
@@ -372,7 +377,7 @@ QuitCommand Quit():
 	//System.out.println("Quit()");
 }
 {
-	< KW_QUIT > ";"	{ return new QuitCommand(token); }
+	< KW_QUIT >	{ return new QuitCommand(token); }
 }
 
 

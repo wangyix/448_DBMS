@@ -15,7 +15,7 @@ public class AttrConstraintTypeChecker extends SimpleASTVisitor{
 	
 	private static AttrConstraintTypeChecker visitor;	// singleton
 	
-	public static void check(CreateTableCommand.AttributeDescriptor attrDescriptor)
+	public static void check(CreateCommand.AttributeDescriptor attrDescriptor)
 			throws DatabaseException {
 
 		Exp constraint = attrDescriptor.getConstraint();

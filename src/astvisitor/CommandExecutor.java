@@ -1,5 +1,7 @@
 package astvisitor;
 
+import java.util.*;
+
 import ast.*;
 import database.*;
 import exception.DatabaseException;
@@ -23,7 +25,7 @@ public class CommandExecutor extends SimpleASTVisitor{
 	
 	// CREATE TABLE---------------------------------------------------------
 	@Override
-	public Object visit(CreateTableCommand command) throws DatabaseException
+	public Object visit(CreateCommand command) throws DatabaseException
 	{
 		String newTableName = command.getTableName();
 		
@@ -35,6 +37,7 @@ public class CommandExecutor extends SimpleASTVisitor{
 		Schema newSchema = new Schema(command);
 		Table newTable = new Table(newTableName, newSchema);
 		Database.putTable(newTable);
+		
 		System.out.println("Created new table '"+newTableName+"'.");
 		return newTable;
 	}
@@ -42,7 +45,7 @@ public class CommandExecutor extends SimpleASTVisitor{
 	
 	// DROP TABLE -------------------------------------------------------------
 	@Override
-	public Object visit(DropTableCommand command) throws DatabaseException
+	public Object visit(DropCommand command) throws DatabaseException
 	{
 		String tableName = command.getTableName();
 		// check if table exists
@@ -50,6 +53,7 @@ public class CommandExecutor extends SimpleASTVisitor{
 			throw new DatabaseException("Table '"+tableName+"' does not exist.");
 		}
 		Database.removeTable(tableName);
+		
 		System.out.println("Dropped table '"+tableName+"'.");
 		return null;
 	}
@@ -59,7 +63,21 @@ public class CommandExecutor extends SimpleASTVisitor{
 	@Override
 	public Object visit(SelectCommand command) throws DatabaseException
 	{
-		return defaultVisit(command);
+		List<String> tableNames = command.getTableNames();
+		
+		// find each table referenced in the WHERE clause
+		Table[] tables = new Table[tableNames.size()];
+		for (int i=0; i<tableNames.size(); ++i) {
+			String tableName = tableNames.get(i);
+			tables[i] = Database.getTable(tableName);
+			if (tables[i] == null) {
+				throw new DatabaseException("Table '"+tableName+"' does not exist.");
+			}
+		}
+		
+		
+		
+		return null;
 	}
 	
 	
@@ -74,12 +92,14 @@ public class CommandExecutor extends SimpleASTVisitor{
 		}
 		
 		// create a new tuple and evaluate each tuple value expression
-		Tuple newTuple = new Tuple(table);
-		for (Exp newValue : command.getValues()) {
-			newTuple.append(ExpEvaluator.evaluate(newValue, null));
+		//Tuple newTuple = new Tuple();
+		List<Exp> newValueExps = command.getValues();
+		Object[] newValues = new Object[newValueExps.size()];
+		for (int i=0; i<newValues.length; ++i) {
+			newValues[i] = ExpEvaluator.evaluate(newValueExps.get(i), null);
 		}
 
-		table.addTuple(newTuple);
+		table.addTuple(new Tuple(newValues));
 		System.out.println("Added tuple to '"+tableName+"'.");
 		return null;
 	}

@@ -16,27 +16,16 @@ public class Table {
 		this.name = name;
 		this.schema = schema;
 		tuples = new ArrayList<Tuple>();
+		iteratorIndex = 0;
 	}
-	
-	public String getName() {
-		return name;
-	}
-	
-	public Schema getSchema() {
-		return schema;
-	}
-	
-	public List<Tuple> getTuples() {
-		return tuples;
-	}
-	
-	
+
+		
 	public void addTuple(Tuple newTuple) throws DatabaseException {
 		
-		List<Attribute> attributes = schema.getAttributes();
-		List<Object> values = newTuple.getValues();
+		Attribute[] attributes = schema.getAttributes();
+		Object[] values = newTuple.getValues();
 		
-		if (values.size() != attributes.size()) {
+		if (values.length != attributes.length) {
 			throw new DatabaseException("Tuple does not have the correct number of values"+
 					" as specified by the schema of table '"+name+"'.");
 		}
@@ -44,17 +33,17 @@ public class Table {
 		// for each schema attribute, type check and constraint check the corresponding
 		// value in the tuple
 		
-		List<Tuple> referencedTuples = new ArrayList<Tuple>();	// used for constraint checking
-		referencedTuples.add(newTuple);
+		TupleWithSchema[] referencedTuples = new TupleWithSchema[1];	// used for constraint checking
+		referencedTuples[0] = new TupleWithSchema(newTuple, schema);
 		
-		for (int i=0; i<attributes.size(); ++i) {
+		for (int i=0; i<attributes.length; ++i) {
 			
-			Attribute attribute = attributes.get(i);
+			Attribute attribute = attributes[i];
 			
 			// check compliance with attribute type
 			
 			Attribute.Type expectedType = attribute.getType();
-			Object value = values.get(i);
+			Object value = values[i];
 			boolean typeCompatible = false;
 			switch (expectedType) {
 			case INT:
@@ -127,16 +116,48 @@ public class Table {
 			}
 		}
 		
+		
+		// check foreign key referential integrity constraint
+		// TODO:
+		
+		
+		
+		
 		tuples.add(newTuple);
 	}
 	
-	
-	
+			
 	public void print() {
 		schema.print();
 		for (Tuple t : tuples) {
-			t.print();
+			t.print(schema);
 		}
+	}
+	
+	
+	public String getName() {
+		return name;
+	}
+	
+	public Schema getSchema() {
+		return schema;
+	}
+	
+	public List<Tuple> getTuples() {
+		return tuples;
+	}
+
+	
+	// iterator stuff
+	
+	private int iteratorIndex;
+	
+	public void resetIterator() {
+		iteratorIndex = 0;
+	}
+	
+	public Tuple getNextTuple() {
+		return tuples.get(iteratorIndex++);
 	}
 }
 

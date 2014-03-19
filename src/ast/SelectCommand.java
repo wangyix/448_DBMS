@@ -7,27 +7,27 @@ import exception.DatabaseException;
 import parser.Token;
 
 public class SelectCommand extends Command {
-	private List<AttributeExp> attributes;	// null means SELECT *
-	private List<String> tables;
-	private Exp conditions;					// null means select all rows
+	private List<String> attrNames;	// null means SELECT *
+	private List<String> tableNames;
+	private Exp condition;					// null means select all rows
 	
-	public SelectCommand(Token tok, List<AttributeExp> attributes, List<String> tables, Exp conditions) {
+	public SelectCommand(Token tok, List<String> attrNames, List<String> tableNames, Exp condition) {
 		super(tok);
-		this.attributes = attributes;
-		this.tables = tables;
-		this.conditions = conditions;
+		this.attrNames = attrNames;
+		this.tableNames = tableNames;
+		this.condition = condition;
 	}
 	
-	public List<AttributeExp> getAttributes() {
-		return attributes;
+	public List<String> getAttrNames() {
+		return attrNames;
 	}
 
-	public List<String> getTables() {
-		return tables;
+	public List<String> getTableNames() {
+		return tableNames;
 	}
 
-	public Exp getConditions() {
-		return conditions;
+	public Exp getcondition() {
+		return condition;
 	}
 	
 	public Object accept(ASTVisitor visitor) throws DatabaseException { return visitor.visit(this); }

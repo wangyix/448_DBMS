@@ -2,17 +2,17 @@ package database;
 
 import java.util.*;
 
-import ast.CreateTableCommand;
+import ast.CreateCommand;
 import exception.DatabaseException;
 
 public class Schema {
 	
 	public class ForeignKey{
 		
-		private List<Integer> foreignKeyPositions;	// order corresponds to order of attributes in referenced primary key
+		private int[] foreignKeyPositions;	// order corresponds to order of attributes in referenced primary key
 		private Table refTable;
 		
-		public ForeignKey(CreateTableCommand.ForeignKeyDescriptor
+		public ForeignKey(CreateCommand.ForeignKeyDescriptor
 			foreignKeyDescriptor) throws DatabaseException {
 			
 			String refTableName = foreignKeyDescriptor.getRefTableName();
@@ -35,18 +35,21 @@ public class Schema {
 			}
 			
 			Schema refSchema = refTable.getSchema();
-			
-			if (refToLocalMap.size() != refSchema.getAttributes().size()) {
+			int[] refSchemaPrimaryKeyPositions = refSchema.getPrimaryKeyPositions();
+			if (refToLocalMap.size() != refSchemaPrimaryKeyPositions.length) {
 				throw new DatabaseException("Number of foreign key attributes does not match "+
 						"actual number of primary key attributes in referenced table '"+refTableName+"'.");
 			}
 			
 			// find the local attr positions corresponding to each key attribute of the
 			// referenced table
-			foreignKeyPositions = new ArrayList<Integer>();	
-			for (Integer pos : refSchema.getPrimaryKeyPositions()) {
+			
+			foreignKeyPositions = new int[refSchemaPrimaryKeyPositions.length];	
+			//for (Integer pos : refSchema.getPrimaryKeyPositions()) {
+			for (int i=0; i<refSchemaPrimaryKeyPositions.length; ++i) {
 				
-				String refAttrName = refSchema.getAttribute(pos).getName();
+				String refAttrName = refSchema.getAttribute(
+						refSchemaPrimaryKeyPositions[i]).getName();
 				
 				String localAttrName = refToLocalMap.get(refAttrName);
 				if (localAttrName == null) {
@@ -58,10 +61,10 @@ public class Schema {
 				if (localAttrPosition == null) {
 					throw new DatabaseException("Local attribute '"+localAttrName+"' does not exist.");
 				}
-				foreignKeyPositions.add(localAttrPosition);
+				foreignKeyPositions[i] = localAttrPosition;
 			}
 		}
-		public List<Integer> getForeignKeyPositions() {
+		public int[] getForeignKeyPositions() {
 			return foreignKeyPositions;
 		}
 		public Table getRefTable() {
@@ -70,53 +73,57 @@ public class Schema {
 	}
 	
 	
-	private List<Attribute> attributes;
+	private Attribute[] attributes;
 	private Map<String, Integer> attributesMap;	// maps attr name to its position
 	
-	private List<Integer> primaryKeyPositions;
-	private List<ForeignKey> foreignKeys;
+	private int[] primaryKeyPositions;
+	private ForeignKey[] foreignKeys;
 	
 	
-	public Schema(CreateTableCommand command) throws DatabaseException {
+	public Schema(CreateCommand command) throws DatabaseException {
 
-		this.attributes = new ArrayList<Attribute>();
-		int i = 0;
-		for (CreateTableCommand.AttributeDescriptor ad : command.getAttributeDescriptors()) {
-			// attribute constructor does checks on its constraint
-			attributes.add(new Attribute(i, ad));
-			i++;
+		// create the attributes based on AttributeDescriptors
+		List<CreateCommand.AttributeDescriptor> attrDescriptors = command.getAttributeDescriptors();
+		attributes = new Attribute[attrDescriptors.size()];
+		for (int i=0; i<attrDescriptors.size(); ++i) {
+			attributes[i] = new Attribute(i, attrDescriptors.get(i));
 		}
 		
 		// generate map based on attributes
 		attributesMap = new HashMap<String, Integer>();
-		for (Attribute a : this.attributes) {
-			attributesMap.put(a.getName(), a.getPosition());
+		for (int i=0; i<attributes.length; ++i) {
+			attributesMap.put(attributes[i].getName(), i);
 		}
 		
 		// generate primaryKeyPositions based on primaryKeyAttrNames
-		this.primaryKeyPositions = new ArrayList<Integer>();
-		for (String s : command.getPrimaryKeyAttrNames()) {
-			Integer position = attributesMap.get(s);
+		List<String> primaryKeyAttrNames = command.getPrimaryKeyAttrNames();
+		primaryKeyPositions = new int[primaryKeyAttrNames.size()];
+		for (int i=0; i<primaryKeyPositions.length; ++i) {
+			String primaryKeyAttrName = primaryKeyAttrNames.get(i);
+			Integer position = attributesMap.get(primaryKeyAttrName);
 			if (position == null) {
-				throw new DatabaseException("Primary key attribute '"+s+"' does not exist.");
+				throw new DatabaseException("Primary key attribute '"+
+						primaryKeyAttrName+"' does not exist.");
 			}
-			primaryKeyPositions.add(position);
+			primaryKeyPositions[i] = position;
 		}
 		
-		foreignKeys = new ArrayList<ForeignKey>();
-		for (CreateTableCommand.ForeignKeyDescriptor fkd : command.getForeignKeyDescriptors()) {
-			foreignKeys.add(new ForeignKey(fkd));
+		List<CreateCommand.ForeignKeyDescriptor> foreignKeyDescriptors = 
+				command.getForeignKeyDescriptors();
+		foreignKeys = new ForeignKey[foreignKeyDescriptors.size()];
+		for (int i=0; i<foreignKeys.length; ++i) {
+			foreignKeys[i] = new ForeignKey(foreignKeyDescriptors.get(i));
 		}
 	}
 	
 	
 	public void print() {
 		int rowWidth = 0;
-		for (int i=0; i<attributes.size(); ++i) {
-			Attribute attribute = attributes.get(i);
+		for (int i=0; i<attributes.length; ++i) {
+			Attribute attribute = attributes[i];
 			rowWidth += attribute.getPrintWidth();
 			attribute.print();
-			if (i != attributes.size()-1) {
+			if (i != attributes.length-1) {
 				System.out.print(" ");
 				rowWidth++;
 			}
@@ -129,28 +136,28 @@ public class Schema {
 	}
 	
 	
-	public List<Attribute> getAttributes() {
+	public Attribute[] getAttributes() {
 		return attributes;
 	}
 
 	public Attribute getAttribute(String attrName) {
-		return attributes.get(attributesMap.get(attrName));
+		return attributes[attributesMap.get(attrName)];
 	}
 
 	public Attribute getAttribute(int position) {
-		return attributes.get(position);
+		return attributes[position];
 	}
 	
 	public int getAttributePosition(String attrName) {
 		return attributesMap.get(attrName);
 	}
 	
-	public List<Integer> getPrimaryKeyPositions() {
+	public int[] getPrimaryKeyPositions() {
 		return primaryKeyPositions;
 	}
 
 
-	public List<ForeignKey> getForeignKeys() {
+	public ForeignKey[] getForeignKeys() {
 		return foreignKeys;
 	}
 }

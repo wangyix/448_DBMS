@@ -40,11 +40,11 @@ private int jjMoveStringLiteralDfa0_0()
       case 33:
          return jjMoveStringLiteralDfa1_0(0x8000000000L);
       case 40:
-         jjmatchedKind = 48;
+         jjmatchedKind = 49;
          return jjMoveNfa_0(3, 0);
       case 41:
-         jjmatchedKind = 50;
-         return jjMoveStringLiteralDfa1_0(0x8000000000000L);
+         jjmatchedKind = 51;
+         return jjMoveNfa_0(3, 0);
       case 42:
          jjmatchedKind = 36;
          return jjMoveNfa_0(3, 0);
@@ -52,7 +52,7 @@ private int jjMoveStringLiteralDfa0_0()
          jjmatchedKind = 34;
          return jjMoveNfa_0(3, 0);
       case 44:
-         jjmatchedKind = 49;
+         jjmatchedKind = 50;
          return jjMoveNfa_0(3, 0);
       case 45:
          jjmatchedKind = 35;
@@ -61,7 +61,7 @@ private int jjMoveStringLiteralDfa0_0()
          jjmatchedKind = 37;
          return jjMoveNfa_0(3, 0);
       case 59:
-         jjmatchedKind = 52;
+         jjmatchedKind = 48;
          return jjMoveNfa_0(3, 0);
       case 60:
          jjmatchedKind = 40;
@@ -148,13 +148,6 @@ private int jjMoveStringLiteralDfa1_0(long active0)
    }
    switch(curChar)
    {
-      case 59:
-         if ((active0 & 0x8000000000000L) != 0L)
-         {
-            jjmatchedKind = 51;
-            jjmatchedPos = 1;
-         }
-         break;
       case 61:
          if ((active0 & 0x8000000000L) != 0L)
          {
@@ -1032,15 +1025,15 @@ public static final String[] jjstrLiteralImages = {
 "", null, null, null, null, null, null, null, null, null, null, null, null, 
 null, null, null, null, null, null, null, null, null, null, null, null, null, null, 
 null, null, null, null, null, null, null, "\53", "\55", "\52", "\57", "\75", 
-"\41\75", "\74", "\76", "\74\75", "\76\75", null, null, null, null, "\50", "\54", "\51", 
-"\51\73", "\73", };
+"\41\75", "\74", "\76", "\74\75", "\76\75", null, null, null, null, "\73", "\50", "\54", 
+"\51", };
 
 /** Lexer state names. */
 public static final String[] lexStateNames = {
    "DEFAULT",
 };
 static final long[] jjtoToken = {
-   0x1fffffffffff01L, 
+   0xfffffffffff01L, 
 };
 static final long[] jjtoSkip = {
    0xfeL, 
