@@ -3,6 +3,7 @@ package database;
 import java.util.*;
 
 import ast.Exp;
+import astvisitor.AttrConstraintEvaluator;
 import astvisitor.ExpEvaluator;
 import exception.DatabaseException;
 
@@ -19,7 +20,67 @@ public class Table {
 		iteratorIndex = 0;
 	}
 
+	
+	private void verifyPrimaryKeyUniqueness(Tuple tuple, List<Tuple> existingTuples)
+			throws DatabaseException {
 		
+		for (Tuple t : existingTuples) {
+			boolean keyIsDifferent = false;
+			for (Integer position : schema.getPrimaryKeyPositions()) {
+				Object value = t.getValueAt(position);
+				Object newValue = tuple.getValueAt(position);
+				if (!Tuple.valuesEqual(value, newValue)) {
+					keyIsDifferent = true;
+					break;
+				}
+			}
+			if (!keyIsDifferent) {
+				throw new DatabaseException("Primary key uniqueness constraint not met.");
+			}
+		}
+	}
+	
+	
+	
+	private void verifyForeignKeyConstraints(Tuple tuple) throws DatabaseException {
+		
+		for (Schema.ForeignKey fk : schema.getForeignKeys()) {
+			
+			Table refTable = fk.getRefTable();
+			
+			// get the values of the foreign key attributes of newtuple
+			int[] localKeyPositions = fk.getForeignKeyPositions();
+			Object[] localKeyValues = new Object[localKeyPositions.length];
+			for (int i=0; i<localKeyValues.length; ++i) {
+				localKeyValues[i] = tuple.getValueAt(
+						localKeyPositions[i]);
+			}
+			
+			// iterate through tuples of refTable looking for one with
+			// matching primary key
+			int[] refKeyPositions = refTable.getSchema().getPrimaryKeyPositions();
+			boolean matchFound = false;
+			for (Tuple t : refTable.getTuples()) {
+				matchFound = true;
+				for (int i=0; i<refKeyPositions.length; ++i) {
+					if (!Tuple.valuesEqual(localKeyValues[i],
+							t.getValueAt(refKeyPositions[i]))) {
+						matchFound = false;
+						break;
+					}
+				}
+				if (matchFound)
+					break;
+			}
+			if (!matchFound) {
+				throw new DatabaseException("Referential constraint to table '"
+						+refTable.getName()+"' not met.");
+			}
+		}
+	}
+	
+	
+	
 	public void addTuple(Tuple newTuple) throws DatabaseException {
 		
 		Attribute[] attributes = schema.getAttributes();
@@ -30,104 +91,121 @@ public class Table {
 					" as specified by the schema of table '"+name+"'.");
 		}
 		
-		// for each schema attribute, type check and constraint check the corresponding
-		// value in the tuple
-		
-		Tuple[] referencedTuples = new Tuple[1];	// used for constraint checking
-		Schema[] parentSchemas = new Schema[1];
-		referencedTuples[0] = newTuple;
-		parentSchemas[0] = schema;
-		
+		// for each value, check if it complies with its attribute's type and constraint
 		for (int i=0; i<attributes.length; ++i) {
-			
-			Attribute attribute = attributes[i];
-			
-			// check compliance with attribute type
-			
-			Attribute.Type expectedType = attribute.getType();
-			Object value = values[i];
-			boolean typeCompatible = false;
-			switch (expectedType) {
-			case INT:
-				if (value instanceof Integer)
-					typeCompatible = true;
-				break;
-			case DECIMAL:
-				if (value instanceof Integer || value instanceof Double)
-					typeCompatible = true;
-				break;
-			case CHAR:
-				if (value instanceof String) {
-					String valueStr = (String)value;
-					if (valueStr.length() > attribute.getLength()) {
-						throw new DatabaseException("String at position "+i+" of tuple is longer than"+
-								" expected by the schema of table '"+name+"'.");
-					}
-					typeCompatible = true;
-				}
-			}
-			if (!typeCompatible) {
-				throw new DatabaseException("Value at position "+i+" of tuple does not match"+
-						" type expected by the schema of table '"+name+"'.");
-			}
-			
-			// check compliance with attribute constraint
-			
-			Exp constraint = attribute.getConstraint();
-			if (constraint != null) {
-				boolean constraintComply = (boolean)ExpEvaluator.evaluate(constraint, referencedTuples, parentSchemas);
-				if (!constraintComply) {
-					throw new DatabaseException("Value at position "+i+" of tuple failed"+
-							" its attribute constraint imposed by the schema of table '"+name+"'.");
-				}
-			}
+			AttrConstraintEvaluator.verifyValueComplies(
+					newTuple.getValueAt(i), schema.getAttribute(i));
 		}
-		
 		
 		// check primary key uniqueness constraint
-		
-		for (Tuple tuple : tuples) {
-			
-			boolean keyIsDifferent = false;
-			
-			for (Integer position : schema.getPrimaryKeyPositions()) {
-				Attribute.Type keyAttrType = schema.getAttribute(position).getType();
-				Object value = tuple.getValueAt(position);
-				Object newValue = newTuple.getValueAt(position);
-				if (keyAttrType == Attribute.Type.INT) {
-					if (((int)value) != (int)newValue) {
-						keyIsDifferent = true;
-						break;
-					}
-				} else if (keyAttrType == Attribute.Type.DECIMAL) {
-					if (((double)value) != (double)newValue) {
-						keyIsDifferent = true;
-						break;
-					}
-				} else {
-					if (!((String)value).equals((String)newValue)) {
-						keyIsDifferent = true;
-						break;
-					}
-				}
-			}
-			if (!keyIsDifferent) {
-				throw new DatabaseException("New tuple violates primary key uniqueness constraint of table '"
-						+name+"'.");
-			}
-		}
-		
-		
+		verifyPrimaryKeyUniqueness(newTuple, tuples);
+				
 		// check foreign key referential integrity constraint
-		// TODO:
-		
-		
-		
+		// NOTE: new tuple cannot reference itself
+		verifyForeignKeyConstraints(newTuple);
 		
 		tuples.add(newTuple);
 	}
 	
-			
+	
+	
+	
+	public void deleteTuples(Exp condition) throws DatabaseException {
+		
+		if (condition == null) {
+			tuples.clear();
+			return;
+		}
+		
+		// start a new tuples list
+		 List<Tuple> nextTuples = new ArrayList<Tuple>();
+		
+		// add to it the tuples from the old list that fail the condition
+		Tuple[] refTuples = new Tuple[1];
+		Schema[] parentSchemas = new Schema[1];
+		parentSchemas[0] = schema;
+		for (Tuple t : tuples) {
+			refTuples[0] = t;
+			if (!ExpEvaluator.evaluateCondition(
+					condition, refTuples, parentSchemas)) {
+				nextTuples.add(t);
+			}
+			/* else {
+			 *	// propagate delete, not necessary for this project
+			}*/
+		}
+		tuples = nextTuples;
+	}
+	
+	
+	public void updateTuples(Exp condition, String[] updateAttrNames,
+				Object[] updateValues) throws DatabaseException {
+		
+		// start a new tuples list
+		List<Tuple> nextTuples = new ArrayList<Tuple>();
+		
+		// find each attribute that's being updated
+		Attribute[] updateAttributes = new Attribute[updateAttrNames.length];
+		for (int i=0; i<updateAttributes.length; ++i) {
+			updateAttributes[i] = schema.getAttribute(updateAttrNames[i]);
+			if (updateAttributes[i] == null) {
+				throw new DatabaseException("Attribute '"+updateAttrNames[i]+
+						"' does not exist.");
+			}
+		}
+		
+		// make sure each update value complies with its attribute
+		for (int i=0; i<updateAttributes.length; ++i) {
+			AttrConstraintEvaluator.verifyValueComplies(
+					updateValues[i], updateAttributes[i]);
+		}
+		
+		// go through old tuples and find those that pass condition
+		// add them to new tuple, then run a primary key uniqueness check
+		Tuple[] refTuples = new Tuple[1];
+		Schema[] parentSchemas = new Schema[1];
+		parentSchemas[0] = schema;
+		for (Tuple t : tuples) {
+			// if this tuple will be updated, make a copy of it and update that.
+			// then do a primary key uniqueness check and add it to nextTuples
+			refTuples[0] = t;
+			if (ExpEvaluator.evaluateCondition(
+					condition, refTuples, parentSchemas)) {
+				Tuple tCopy = new Tuple(t);
+				for (int i=0; i<updateAttributes.length; ++i) {
+					tCopy.setValueAt(updateAttributes[i].getPosition(),
+							updateValues[i]);
+				}
+				verifyPrimaryKeyUniqueness(tCopy, nextTuples);
+				nextTuples.add(tCopy);
+			}
+			// otherwise, do a primary key uniqueness check on the original tuple
+			// and add it to nextTuples
+			else {
+				verifyPrimaryKeyUniqueness(t, nextTuples);
+				nextTuples.add(t);
+			}
+		}
+		
+		// move to new table state.  do this before checking referential integrity
+		// since some may reference tuples in this table.
+		// NOTE: it's possible a tuple will reference itself
+		List<Tuple> prevTuples = tuples;
+		tuples = nextTuples;
+		
+		// check referential constraints of updated table.  If not met,
+		// revert to the old table.
+		try {
+			for (Tuple t : tuples)
+				verifyForeignKeyConstraints(t);
+		} catch (DatabaseException e) {
+			tuples = prevTuples;
+			throw e;
+		}
+	}
+	
+	
+	
 	public void print() {
 		schema.print();
 		for (Tuple t : tuples) {

@@ -20,12 +20,13 @@ public class AttrConstraintTypeChecker extends SimpleASTVisitor{
 
 		Exp constraint = attrDescriptor.getConstraint();
 		if (constraint != null) {
-			if (visitor == null)
-				visitor = new AttrConstraintTypeChecker();
 			
 			name = attrDescriptor.getName();
 			type = attrDescriptor.getType();
 			attributeReferenced = false;
+			
+			if (visitor == null)
+				visitor = new AttrConstraintTypeChecker();
 			
 			ExpType constraintType = (ExpType)constraint.accept(visitor);
 			if (constraintType != ExpType.EXP_BOOLEAN) {
@@ -113,7 +114,7 @@ public class AttrConstraintTypeChecker extends SimpleASTVisitor{
             }
 		}
 		else if (left==ExpType.EXP_BOOLEAN && right==ExpType.EXP_BOOLEAN) {
-			if (op.equals("AND") || op.equals("||")) {
+			if (op.equals("AND") || op.equals("OR")) {
 				ret = ExpType.EXP_BOOLEAN;
 			} else {
             	throw new DatabaseException("Op '"+op+"' cannot be applied between conditions.");

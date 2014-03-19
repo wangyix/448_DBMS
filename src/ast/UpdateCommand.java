@@ -7,20 +7,42 @@ import exception.DatabaseException;
 import parser.Token;
 
 public class UpdateCommand extends Command {
-	private String table;
-	private List<AttributeAssign> assignments;
-	private Exp conditions;
 	
-	public UpdateCommand(Token tok, String table, List<AttributeAssign> assignments, Exp conditions) {
-		super(tok);
-		this.table = table;
-		this.assignments = assignments;
-		this.conditions = conditions;
+	public static class UpdateDescriptor {
+	    String attrName;
+		Exp value;
+	    public UpdateDescriptor(String attrName, Exp value) {
+	        this.attrName= attrName;
+	        this.value = value;
+	    }	    
+	    public String getAttrName() {
+	    	return attrName;
+	    }
+	    public Exp getValue() {
+	    	return value;
+	    }
 	}
 	
-	public String getTable() { return table; }
-	public List<AttributeAssign> getAssignments() { return assignments; }
-	public Exp getConditions() { return conditions; }
+	private String tableName;
+	private List<UpdateDescriptor> updateDescriptors;
+	private Exp condition;
+	
+	public UpdateCommand(Token tok, String tableName, List<UpdateDescriptor> assignments, Exp condition) {
+		super(tok);
+		this.tableName = tableName;
+		this.updateDescriptors = assignments;
+		this.condition = condition;
+	}
+	
+	public String getTableName(){
+		return tableName;
+	}
+	public List<UpdateDescriptor> getUpdateDescriptors() {
+		return updateDescriptors;
+	}
+	public Exp getCondition() {
+		return condition;
+	}
 	
 	public Object accept(ASTVisitor visitor) throws DatabaseException { return visitor.visit(this); }
 }

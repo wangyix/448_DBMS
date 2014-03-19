@@ -6,16 +6,16 @@ import parser.Token;
 
 public class DeleteCommand extends Command {
 	private String tableName;
-	private Exp conditions;
+	private Exp condition;
 	
-	public DeleteCommand(Token tok, String tableName, Exp conditions) {
+	public DeleteCommand(Token tok, String tableName, Exp condition) {
 		super(tok);
 		this.tableName = tableName;
-		this.conditions = conditions;
+		this.condition = condition;
 	}
 	
 	public String getTableName() { return tableName; }
-	public Exp getConditions() { return conditions; }
+	public Exp getCondition() { return condition; }
 	
 	public Object accept(ASTVisitor visitor) throws DatabaseException { return visitor.visit(this); }
 }

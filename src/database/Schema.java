@@ -28,15 +28,12 @@ public class Schema {
 			for (int i=0; i<refAttrNames.size(); ++i)
 				refToLocalMap.put(refAttrNames.get(i), localAttrNames.get(i));
 			
-			
+			Database.verifyExist(refTableName);
 			refTable = Database.getTable(refTableName);
-			if (refTable == null) {
-				throw new DatabaseException("Referenced table '"+refTableName+"' does not exist.");
-			}
 			
 			Schema refSchema = refTable.getSchema();
-			int[] refSchemaPrimaryKeyPositions = refSchema.getPrimaryKeyPositions();
-			if (refToLocalMap.size() != refSchemaPrimaryKeyPositions.length) {
+			int[] refKeyPositions = refSchema.getPrimaryKeyPositions();
+			if (refToLocalMap.size() != refKeyPositions.length) {
 				throw new DatabaseException("Number of foreign key attributes does not match "+
 						"number of primary key attributes in referenced table '"+refTableName+"'.");
 			}
@@ -44,11 +41,11 @@ public class Schema {
 			// find the local attr positions corresponding to each key attribute of the
 			// referenced table
 			
-			foreignKeyPositions = new int[refSchemaPrimaryKeyPositions.length];	
+			foreignKeyPositions = new int[refKeyPositions.length];	
 			//for (Integer pos : refSchema.getPrimaryKeyPositions()) {
-			for (int i=0; i<refSchemaPrimaryKeyPositions.length; ++i) {
+			for (int i=0; i<refKeyPositions.length; ++i) {
 				
-				Attribute refAttr = refSchema.getAttribute(refSchemaPrimaryKeyPositions[i]);
+				Attribute refAttr = refSchema.getAttribute(refKeyPositions[i]);
 				String refAttrName = refAttr.getName();
 				
 				String localAttrName = refToLocalMap.get(refAttrName);
@@ -127,7 +124,7 @@ public class Schema {
 	}
 	
 	
-	public void print() {
+	protected void print() {
 		Attribute.printColumnHeaders(attributes);
 	}
 	

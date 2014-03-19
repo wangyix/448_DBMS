@@ -15,15 +15,23 @@ public class Tuple implements Serializable {
 		values = valuesList.toArray();
 	}
 	
+	public Tuple(Tuple t) {		// shallow copy
+		Object[] tValues = t.getValues();
+		values = new Object[tValues.length];
+		for (int i=0; i<values.length; ++i) {
+			values[i] = tValues[i];
+		}
+	}
+	
 	public Tuple(Object[] values) {
 		this.values = values;
 	}
 	
-	public void print(Schema parentSchema) {
+	protected void print(Schema parentSchema) {
 		print(parentSchema.getAttributes());
 	}
 	
-	public void print(Attribute[] attributes) {
+	protected void print(Attribute[] attributes) {
 		for (int i=0; i<values.length; ++i) {
 			Attribute attribute = attributes[i];
 			int printWidth = attribute.getPrintWidth();
@@ -48,6 +56,26 @@ public class Tuple implements Serializable {
 				System.out.print(" ");
 		}
 		System.out.println("");
+	}
+	
+	
+	// assumes values are same type
+	protected static boolean valuesEqual(Object value1, Object value2) {
+		if (value1 instanceof Integer) {
+			return (((Integer)value1).intValue() ==
+					((Integer)value2).intValue());
+		} else if (value1 instanceof Double) {
+			return (((Double)value1).doubleValue() ==
+					((Double)value2).doubleValue());
+		} else {
+			return ((String)value1).equals((String)value2);
+		}
+	}
+	
+	
+	// assumes value passes attribute constraint
+	protected void setValueAt(int position, Object value) {
+		values[position] = value;
 	}
 	
 	public Object[] getValues() {

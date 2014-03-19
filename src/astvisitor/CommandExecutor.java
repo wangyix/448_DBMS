@@ -3,6 +3,7 @@ package astvisitor;
 import java.util.*;
 
 import ast.*;
+import ast.UpdateCommand.UpdateDescriptor;
 import database.*;
 import exception.DatabaseException;
 import astvisitor.ASTVisitor.SimpleASTVisitor;
@@ -30,10 +31,8 @@ public class CommandExecutor extends SimpleASTVisitor{
 		String newTableName = command.getTableName();
 		
 		// check if table already exists
-		if (Database.getTable(newTableName) != null) {
-			throw new DatabaseException("Table '"+newTableName
-					+"' already exists.");
-		}
+		Database.verifyNotExist(newTableName);
+		
 		Schema newSchema = new Schema(command);
 		Table newTable = new Table(newTableName, newSchema);
 		Database.putTable(newTable);
@@ -48,11 +47,7 @@ public class CommandExecutor extends SimpleASTVisitor{
 	public Object visit(DropCommand command) throws DatabaseException
 	{
 		String tableName = command.getTableName();
-		// check if table exists
-		if (Database.getTable(tableName) == null) {
-			throw new DatabaseException("Table '"+tableName+"' does not exist.");
-		}
-		Database.removeTable(tableName);
+		Database.dropTable(tableName);
 		
 		System.out.println("Dropped table '"+tableName+"'.");
 		return null;
@@ -63,120 +58,16 @@ public class CommandExecutor extends SimpleASTVisitor{
 	@Override
 	public Object visit(SelectCommand command) throws DatabaseException
 	{
-		Exp condition = command.getcondition();
+		List<String> attrNamesList = command.getAttrNames();
+		List<String> tableNamesList = command.getTableNames();
 		
-		Table[] tables;
-		Schema[] schemas;			// ith entry is schema of table i
-		Tuple[] currentTupleCombo;	// ith entry is the tuple from table i
-		
-		Attribute[] attributes;
-		int[] attrTableIndex;	// ith entry is ith attribute's parent table's index in tables[]
-		
-		
-		// find each table referenced in the WHERE clause, store its schema
-		List<String> tableNames = command.getTableNames();
-		tables = new Table[tableNames.size()];
-		schemas = new Schema[tables.length];
-		for (int i=0; i<tableNames.size(); ++i) {
-			String tableName = tableNames.get(i);
-			tables[i] = Database.getTable(tableName);
-			if (tables[i] == null) {
-				throw new DatabaseException("Table '"+tableName+"' does not exist.");
-			}
-			if (tables[i].getTuples().isEmpty()) {
-				throw new DatabaseException("Table '"+tableName+"' is empty.");
-			}
-			schemas[i] = tables[i].getSchema();
+		String[] attrNames = null;
+		if (attrNamesList != null) {
+			attrNamesList.toArray(new String[attrNamesList.size()]);
 		}
+		String[] tableNames = tableNamesList.toArray(new String[tableNamesList.size()]);
 		
-		// find and record the table and column-position of each selected attribute
-		List<String> attrNames = command.getAttrNames();
-		
-		if (attrNames == null) {	// add all attributes from all tables if SELECT *
-			int totalNumAttributes = 0;
-			for (Schema s : schemas) 
-				totalNumAttributes += s.getAttributes().length;
-			
-			attributes = new Attribute[totalNumAttributes];
-			attrTableIndex = new int[attributes.length];
-			
-			int attributeIndex = 0;
-			for (int tableIndex=0; tableIndex<tables.length; ++tableIndex) {
-				Attribute[] schemaAttributes = schemas[tableIndex].getAttributes();
-				for (int i=0; i<schemaAttributes.length; ++i) {
-					attributes[attributeIndex] = schemaAttributes[i];
-					attrTableIndex[attributeIndex] = tableIndex;
-					attributeIndex++;
-				}
-			}
-			
-		} else {				// otherwise, add attributes specified in the SELECT
-			attributes = new Attribute[attrNames.size()];
-			attrTableIndex = new int[attributes.length];		
-			for (int i=0; i<attributes.length; ++i) {
-				
-				String attrName = attrNames.get(i);
-				boolean attrFound = false;
-				
-				for (int tableIndex=0; tableIndex<tables.length; ++tableIndex) {
-					attributes[i] = schemas[tableIndex].getAttribute(attrName);
-					if (attributes[i] != null) {
-						attrTableIndex[i] = tableIndex;
-						attrFound = true;
-						break;
-					}
-				}
-				if (!attrFound) {
-					throw new DatabaseException("Selected attribute '"+attrName+"' not found "+
-							"in any of the specified tables.");
-				}
-			}
-		}
-		
-		// check every combo of choosing one tuple from each table,
-		// construct a view
-		
-		View view = new View(attributes);
-				
-		// fill currentTupleCombo with row 0 from all tables
-		currentTupleCombo = new Tuple[tables.length];
-		for (int i=0; i<tables.length; ++i) {
-			tables[i].resetIterator();
-			currentTupleCombo[i] = tables[i].getNextTuple();
-		}
-		// iterate thru all combinations of rows
-		int tableIndexToIncrement;
-		do {
-			
-			// check current combination of rows
-			Object result = ExpEvaluator.evaluate(condition, currentTupleCombo, schemas);
-			if (!(result instanceof Boolean)) {
-				throw new DatabaseException("Condition does not evaluate to a boolean.");
-			}
-			if ((boolean)result) {
-				Object[] newValues = new Object[attributes.length];
-				for (int j=0; j<newValues.length; ++j) {
-					newValues[j] = currentTupleCombo[attrTableIndex[j]]		// tuple
-							.getValueAt(attributes[j].getPosition());		// value
-				}
-				view.append(new Tuple(newValues));
-			}
-			
-			// increment currentTupleCombo to next combination
-			tableIndexToIncrement = tables.length-1;
-			while (tableIndexToIncrement >= 0) {
-				Table table = tables[tableIndexToIncrement];
-				if (table.hasNext()) {
-					currentTupleCombo[tableIndexToIncrement] = table.getNextTuple();
-					break;
-				}
-				else {
-					table.resetIterator();
-					currentTupleCombo[tableIndexToIncrement] = table.getNextTuple();
-					tableIndexToIncrement--;
-				}
-			}
-		} while (tableIndexToIncrement >= 0);
+		View view = Database.createView(attrNames, tableNames, command.getcondition());
 		
 		view.print();
 		return null;
@@ -188,10 +79,8 @@ public class CommandExecutor extends SimpleASTVisitor{
 	public Object visit(InsertCommand command)throws DatabaseException
 	{
 		String tableName = command.getTableName();
+		Database.verifyExist(tableName);
 		Table table = Database.getTable(tableName);
-		if (table == null) {
-			throw new DatabaseException("Table '"+tableName+"' does not exist.");
-		}
 		
 		// create a new tuple and evaluate each tuple value expression
 		//Tuple newTuple = new Tuple();
@@ -211,14 +100,37 @@ public class CommandExecutor extends SimpleASTVisitor{
 	@Override
 	public Object visit(DeleteCommand command) throws DatabaseException
 	{
-		return defaultVisit(command);
+		String tableName = command.getTableName();
+		Database.verifyExist(tableName);
+		Table table = Database.getTable(tableName);
+		
+		table.deleteTuples(command.getCondition());
+		return null;
 	}
 	
 	
 	// UPDATE SET WHERE -------------------------------------------------------
 	@Override
 	public Object visit(UpdateCommand command) throws DatabaseException
-	{ return defaultVisit(command); }
+	{
+		String tableName = command.getTableName();
+		Database.verifyExist(tableName);
+		Table table = Database.getTable(tableName);
+		
+		// get the attribute names to update; evaluate each update value
+		List<UpdateDescriptor> updateDescriptors = command.getUpdateDescriptors();
+		String[] updateAttrNames = new String[updateDescriptors.size()];
+		Object[] updateValues = new Object[updateAttrNames.length];
+		for (int i=0; i<updateAttrNames.length; ++i) {
+			UpdateDescriptor ud = updateDescriptors.get(i);
+			updateAttrNames[i] = ud.getAttrName();
+			updateValues[i] = ExpEvaluator.evaluate(ud.getValue(), null, null);
+		}
+		
+		table.updateTuples(command.getCondition(), updateAttrNames, updateValues);
+		return null;
+	}
+	
 	
 	// HELP TABLES ------------------------------------------------------------
 	@Override

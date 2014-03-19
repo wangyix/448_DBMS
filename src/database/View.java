@@ -12,7 +12,7 @@ public class View {
 		tuples = new ArrayList<Tuple>();
 	}
 	
-	public void append(Tuple newTuple) {
+	public void addTuple(Tuple newTuple) {
 		tuples.add(newTuple);
 	}
 	

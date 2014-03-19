@@ -1,29 +1,11 @@
 package astvisitor;
 
-import ast.ASTNode;
-import ast.AttributeAssign;
-import ast.AttributeExp;
-import ast.BinaryExp;
-import ast.Command;
-import ast.CreateCommand;
-import ast.DeleteCommand;
-import ast.DropCommand;
-import ast.Exp;
-import ast.HelpCommandCommand;
-import ast.HelpDescribeCommand;
-import ast.HelpTablesCommand;
-import ast.InsertCommand;
-import ast.LiteralExp;
-import ast.QuitCommand;
-import ast.SelectCommand;
-import ast.UnaryExp;
-import ast.UpdateCommand;
+import ast.*;
 import exception.DatabaseException;
 
 public abstract class ASTVisitor {
 
 	public abstract Object visit(ASTNode node) throws DatabaseException;
-	public abstract Object visit(AttributeAssign node) throws DatabaseException;
 	public abstract Object visit(AttributeExp node) throws DatabaseException;
 	public abstract Object visit(BinaryExp node) throws DatabaseException;
 	public abstract Object visit(Command node) throws DatabaseException;
@@ -47,7 +29,6 @@ public abstract class ASTVisitor {
 			throw new DatabaseException("Unsupported node type");
 		}
 		@Override public Object visit(ASTNode node)  throws DatabaseException { return defaultVisit(node); }
-		@Override public Object visit(AttributeAssign node)  throws DatabaseException { return defaultVisit(node); }
 		@Override public Object visit(AttributeExp node)  throws DatabaseException { return defaultVisit(node); }
 		@Override public Object visit(BinaryExp node)  throws DatabaseException { return defaultVisit(node); }
 		@Override public Object visit(Command node)  throws DatabaseException { return defaultVisit(node); }

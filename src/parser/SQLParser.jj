@@ -284,14 +284,14 @@ InsertCommand Insert():
 DeleteCommand Delete():
 {
 	String tableName;
-	Exp conditions;
+	Exp condition = null;
 	
 	//System.out.println("Delete()");
 }
 {
 	< KW_DELETE > < KW_FROM >	( tableName = Identifier() )
-	< KW_WHERE > ( conditions = Expression() )
-	{ return new DeleteCommand(token, tableName, conditions); }
+	( < KW_WHERE > ( condition = Expression() ) )?
+	{ return new DeleteCommand(token, tableName, condition); }
 }
 
 
@@ -299,29 +299,28 @@ DeleteCommand Delete():
 UpdateCommand Update():
 {
 	String tableName;
-	List<AttributeAssign > assignments = new ArrayList<AttributeAssign>();
-	Exp conditions;
+	List<UpdateCommand.UpdateDescriptor > updateDescriptors
+		= new ArrayList<UpdateCommand.UpdateDescriptor>();
+	Exp condition = null;
 
-	AttributeAssign assignment;
+	UpdateCommand.UpdateDescriptor updateDescriptor;
 
 	//System.out.println("Update()");
 }
 {
-	< KW_UPDATE > ( tableName = Identifier() )	< KW_SET > ( ( assignment = AttributeAssignr() ) { assignments.add(assignment); } )	( "," ( assignment = AttributeAssignr() ) { assignments.add(assignment); } )*
-	< KW_WHERE > ( conditions = Expression() )
-	{ return new UpdateCommand(token, tableName, assignments, conditions); }
+	< KW_UPDATE > ( tableName = Identifier() )	< KW_SET > ( ( updateDescriptor = AttributeAssg() ) { updateDescriptors.add(updateDescriptor); } )	( "," ( updateDescriptor = AttributeAssg() ) { updateDescriptors.add(updateDescriptor); } )*
+	( < KW_WHERE > ( condition = Expression() ) )?
+	{ return new UpdateCommand(token, tableName, updateDescriptors, condition); }
 }
 
-AttributeAssign AttributeAssignr():
+UpdateCommand.UpdateDescriptor AttributeAssg():
 {
-	AttributeExp target;
+	String attrName;
 	Exp value;
-	//System.out.println("AttributeAssignr()");
-
-	String name;}
+	//System.out.println("AttributeAssignr()");}
 {
-	( name = Identifier() ) { target = new AttributeExp(token, name); }	< SYM_EQUAL > ( value = Expression() )
-	{ return new AttributeAssign(token, target, value); }}
+	( attrName = Identifier() )	< SYM_EQUAL > ( value = Expression() )
+	{ return new UpdateCommand.UpdateDescriptor(attrName, value); }}
 
 
 // HELP TABLES ----------------------------------------------------------------

@@ -55,7 +55,7 @@ public class Attribute implements Serializable{
 		printWidth = Math.max(printWidth, name.length());
 	}
 	
-	public void print() {
+	private void print() {
 		switch (type) {
 		case INT:
 		case DECIMAL:
@@ -69,7 +69,7 @@ public class Attribute implements Serializable{
 		}
 	}
 	
-	public static void printColumnHeaders(Attribute[] attributes) {
+	protected static void printColumnHeaders(Attribute[] attributes) {
 		int rowWidth = 0;
 		for (int i=0; i<attributes.length; ++i) {
 			Attribute attribute = attributes[i];
