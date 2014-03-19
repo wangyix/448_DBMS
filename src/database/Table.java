@@ -33,8 +33,10 @@ public class Table {
 		// for each schema attribute, type check and constraint check the corresponding
 		// value in the tuple
 		
-		TupleWithSchema[] referencedTuples = new TupleWithSchema[1];	// used for constraint checking
-		referencedTuples[0] = new TupleWithSchema(newTuple, schema);
+		Tuple[] referencedTuples = new Tuple[1];	// used for constraint checking
+		Schema[] parentSchemas = new Schema[1];
+		referencedTuples[0] = newTuple;
+		parentSchemas[0] = schema;
 		
 		for (int i=0; i<attributes.length; ++i) {
 			
@@ -73,8 +75,7 @@ public class Table {
 			
 			Exp constraint = attribute.getConstraint();
 			if (constraint != null) {
-				
-				boolean constraintComply = (boolean)ExpEvaluator.evaluate(constraint, referencedTuples);
+				boolean constraintComply = (boolean)ExpEvaluator.evaluate(constraint, referencedTuples, parentSchemas);
 				if (!constraintComply) {
 					throw new DatabaseException("Value at position "+i+" of tuple failed"+
 							" its attribute constraint imposed by the schema of table '"+name+"'.");
@@ -156,8 +157,13 @@ public class Table {
 		iteratorIndex = 0;
 	}
 	
+	public boolean hasNext() {
+		return (iteratorIndex < tuples.size());
+	}
+	
 	public Tuple getNextTuple() {
-		return tuples.get(iteratorIndex++);
+		Tuple ret = tuples.get(iteratorIndex++);
+		return ret;
 	}
 }
 

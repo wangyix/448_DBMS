@@ -137,12 +137,13 @@ CreateCommand CreateTable():
 
 	CreateCommand.AttributeDescriptor attributeDescriptor;
 	CreateCommand.ForeignKeyDescriptor foreignKeyDescriptor;
+
+	String name;
 	
 	//System.out.println("CreateTable()");
 }
 {
-	< KW_CREATE > < KW_TABLE > < IDENTIFIER >
-	{ tableName = token.image; }
+	< KW_CREATE > < KW_TABLE > ( tableName = Identifier() )
 	"("
 	(
 		(
@@ -151,7 +152,7 @@ CreateCommand CreateTable():
 		)+
 		(			< KW_PRIMARY > < KW_KEY >
 			"("
-				( < IDENTIFIER > { primaryKeyAttrNames.add(token.image); } )				( "," < IDENTIFIER > { primaryKeyAttrNames.add(token.image); } )*
+				( name = Identifier() { primaryKeyAttrNames.add(name); } )				( "," name = Identifier() { primaryKeyAttrNames.add(name); } )*
 			")"
 		)
 		(
@@ -170,7 +171,7 @@ CreateCommand.AttributeDescriptor AttrDecl():
 	Exp constraint = null;
 
 	//System.out.println("AttrDecl()");}{
-	( < IDENTIFIER > { name = token.image; } )
+	( name = Identifier() )
 	(			
 		(			< KW_INT > { type = Attribute.Type.INT; }
 		)
@@ -192,18 +193,20 @@ CreateCommand.ForeignKeyDescriptor ForeignKeyDecl():
 {	String refTableName;
 	List<String> localAttrNames = new ArrayList<String>();
 	List<String> refAttrNames = new ArrayList<String>();
+
+	String name;
 }
 {
 	< KW_FOREIGN > < KW_KEY >
 	"("
-	( < IDENTIFIER > { localAttrNames.add(token.image); } )
-	( "," < IDENTIFIER > { localAttrNames.add(token.image); } )*
+	( name = Identifier() { localAttrNames.add(name); } )
+	( "," name = Identifier() { localAttrNames.add(name); } )*
 	")"
 	< KW_REFERENCES >
-	( < IDENTIFIER > { refTableName = token.image; } )
+	( refTableName = Identifier() )
 	"("
-	( < IDENTIFIER > { refAttrNames.add(token.image); } )
-	( "," < IDENTIFIER > { refAttrNames.add(token.image); } )*
+	( name = Identifier() { refAttrNames.add(name); } )
+	( "," name = Identifier() { refAttrNames.add(name); } )*
 	")"
 	{ return new CreateCommand.ForeignKeyDescriptor(
 		refTableName, localAttrNames, refAttrNames); }}
@@ -212,11 +215,14 @@ CreateCommand.ForeignKeyDescriptor ForeignKeyDecl():
 DropCommand DropTable():
 {
 	DropCommand ret;
+
+	String name;
+	
 	//System.out.println("DropTable()");
 }
 {
-	< KW_DROP > < KW_TABLE > < IDENTIFIER >
-	{ ret = new DropCommand(token, token.image); }
+	< KW_DROP > < KW_TABLE > ( name = Identifier() )
+	{ ret = new DropCommand(token, name); }
 	{ return ret; }
 }
 
@@ -228,25 +234,27 @@ SelectCommand Select():
 	List<String> tables = new ArrayList<String>();
 	Exp condition = null;
 
+	String name;
+
 	//System.out.println("Select()");
 }
 {
 	< KW_SELECT >
 	(	
 		(			(
-				< IDENTIFIER >
+				( name = Identifier() )
 				{
 					attrNames = new ArrayList<String>();
-					attrNames.add(token.image);
+					attrNames.add(name);
 				}
 			)
-			( "," < IDENTIFIER > { attrNames.add(token.image); } )*
+			( "," ( name = Identifier() ) { attrNames.add(name); } )*
 		)
 	|	< SYM_STAR >
 	)
 	< KW_FROM >
-	( < IDENTIFIER > { tables.add(token.image); } )
-	( "," < IDENTIFIER > { tables.add(token.image); } )*
+	( ( name = Identifier() ) { tables.add(name); } )
+	( "," ( name = Identifier() ) { tables.add(name); } )*
 	( < KW_WHERE > ( condition = Expression() ) )?
 	{ return new SelectCommand(token, attrNames, tables, condition); }
 }
@@ -255,7 +263,7 @@ SelectCommand Select():
 // INSERT INTO table VALUES(val1,...) -----------------------------------------
 InsertCommand Insert():
 {
-	String table;
+	String tableName;
 	List<Exp> values = new ArrayList<Exp>();
 
 	Exp value;
@@ -263,33 +271,34 @@ InsertCommand Insert():
 	//System.out.println("Insert()");
 }
 {
-	< KW_INSERT > < KW_INTO > < IDENTIFIER > { table = token.image; }
+	< KW_INSERT > < KW_INTO > ( tableName = Identifier() )
 	< KW_VALUES > "("
 	( ( value = Expression() ) { values.add(value); } )
 	( "," ( value = Expression() ) { values.add(value); } )*
 	")"
-	{ return new InsertCommand(token, table, values); }
+	{ return new InsertCommand(token, tableName, values); }
 }
 
 
 // DELETE FROM table WHERE conditions -----------------------------------------
 DeleteCommand Delete():
 {
-	String table;
+	String tableName;
 	Exp conditions;
+	
 	//System.out.println("Delete()");
 }
 {
-	< KW_DELETE > < KW_FROM >	< IDENTIFIER > { table = token.image; }
+	< KW_DELETE > < KW_FROM >	( tableName = Identifier() )
 	< KW_WHERE > ( conditions = Expression() )
-	{ return new DeleteCommand(token, table, conditions); }
+	{ return new DeleteCommand(token, tableName, conditions); }
 }
 
 
 // UPDATE table SET attr1=val1, ... WHERE conditions --------------------------
 UpdateCommand Update():
 {
-	String table;
+	String tableName;
 	List<AttributeAssign > assignments = new ArrayList<AttributeAssign>();
 	Exp conditions;
 
@@ -298,18 +307,20 @@ UpdateCommand Update():
 	//System.out.println("Update()");
 }
 {
-	< KW_UPDATE > < IDENTIFIER > { table = token.image; }	< KW_SET > ( ( assignment = AttributeAssignr() ) { assignments.add(assignment); } )	( "," ( assignment = AttributeAssignr() ) { assignments.add(assignment); } )*
+	< KW_UPDATE > ( tableName = Identifier() )	< KW_SET > ( ( assignment = AttributeAssignr() ) { assignments.add(assignment); } )	( "," ( assignment = AttributeAssignr() ) { assignments.add(assignment); } )*
 	< KW_WHERE > ( conditions = Expression() )
-	{ return new UpdateCommand(token, table, assignments, conditions); }
+	{ return new UpdateCommand(token, tableName, assignments, conditions); }
 }
 
 AttributeAssign AttributeAssignr():
 {
 	AttributeExp target;
 	Exp value;
-	//System.out.println("AttributeAssignr()");}
+	//System.out.println("AttributeAssignr()");
+
+	String name;}
 {
-	< IDENTIFIER > { target = new AttributeExp(token, token.image); }	< SYM_EQUAL > ( value = Expression() )
+	( name = Identifier() ) { target = new AttributeExp(token, name); }	< SYM_EQUAL > ( value = Expression() )
 	{ return new AttributeAssign(token, target, value); }}
 
 
@@ -326,11 +337,12 @@ HelpTablesCommand HelpTables_suffix():
 HelpDescribeCommand HelpDescribe_suffix():
 {
 	HelpDescribeCommand ret;
+	String tableName;
 	//System.out.println("HelpDescribe()");
 }
 {
-	< KW_DESCRIBE > < IDENTIFIER >
-	{ ret = new HelpDescribeCommand(token, token.image); }
+	< KW_DESCRIBE > ( tableName = Identifier() )
+	{ ret = new HelpDescribeCommand(token, tableName); }
 	{ return ret; }
 }
 
@@ -549,6 +561,8 @@ Exp PrimaryExp():
 {
 	Exp ret;
 	//System.out.println("PrimaryExp()");
+
+	String name;
 }
 {
 	(
@@ -569,9 +583,9 @@ Exp PrimaryExp():
 			}
 		)
 	|	(
-			< IDENTIFIER >
-			{ret = new AttributeExp(token, token.image);
-			Exp.appendToGlobalExpString(token.image); }
+			( name = Identifier() )
+			{ret = new AttributeExp(token, name);
+			Exp.appendToGlobalExpString(name); }
 		)
 	|	(
 			"(" { Exp.appendToGlobalExpString('('); }			( ret = LogicOp() )
@@ -579,4 +593,12 @@ Exp PrimaryExp():
 		)
 	)
 	{ return ret; }
+}
+
+
+String Identifier():
+{}
+{
+	< IDENTIFIER >
+	{ return token.image.toUpperCase(); }
 }

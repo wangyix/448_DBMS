@@ -7,7 +7,7 @@ import exception.DatabaseException;
 import parser.Token;
 
 public class SelectCommand extends Command {
-	private List<String> attrNames;	// null means SELECT *
+	private List<String> attrNames;			// null means SELECT *
 	private List<String> tableNames;
 	private Exp condition;					// null means select all rows
 	

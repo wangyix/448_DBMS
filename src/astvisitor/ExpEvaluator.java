@@ -1,5 +1,6 @@
 package astvisitor;
 
+
 import database.*;
 import exception.DatabaseException;
 import ast.AttributeExp;
@@ -11,17 +12,21 @@ import astvisitor.ASTVisitor.SimpleASTVisitor;
 
 public class ExpEvaluator extends SimpleASTVisitor {
 	
-	private static TupleWithSchema[] tuples;	// no two tuples from same table, use null for literals only
+	private static Tuple[] tuples;		// no two tuples from same table, use null for literals-only exps
+	private static Schema[] schemas;	// corresponding parent schemas of the tuples
 	private static ExpEvaluator visitor;			// singleton
 	
 	
-	public static Object evaluate(Exp exp, TupleWithSchema[] referencedTuples)
+	public static Object evaluate(Exp exp, Tuple[] refTuples, Schema[] parentSchemas)
 			throws DatabaseException {
 		
 		if (visitor==null)
 			visitor = new ExpEvaluator();
 		
-		tuples = referencedTuples;
+		tuples = refTuples;
+		schemas = parentSchemas;
+		if (exp == null)		// if no condition, everything passes
+			return true;
 		return exp.accept(visitor);
 	}
 	
@@ -43,12 +48,11 @@ public class ExpEvaluator extends SimpleASTVisitor {
 		// find this attribute's position and containing tuple
 		String attrName = node.getName();
 		boolean attrFound = false;
-		for (TupleWithSchema tws : tuples) {
-			Integer position = tws.getParentSchema()
-							.getAttributePosition(attrName);
+		for (int i=0; i<tuples.length; ++i) {
+			Integer position = schemas[i].getAttributePosition(attrName);
 			if (position != null) {
 				attrFound = true;
-				ret = tws.getTuple().getValueAt(position);
+				ret = tuples[i].getValueAt(position);
 				break;
 			}
 		}

@@ -38,7 +38,7 @@ public class Schema {
 			int[] refSchemaPrimaryKeyPositions = refSchema.getPrimaryKeyPositions();
 			if (refToLocalMap.size() != refSchemaPrimaryKeyPositions.length) {
 				throw new DatabaseException("Number of foreign key attributes does not match "+
-						"actual number of primary key attributes in referenced table '"+refTableName+"'.");
+						"number of primary key attributes in referenced table '"+refTableName+"'.");
 			}
 			
 			// find the local attr positions corresponding to each key attribute of the
@@ -48,8 +48,8 @@ public class Schema {
 			//for (Integer pos : refSchema.getPrimaryKeyPositions()) {
 			for (int i=0; i<refSchemaPrimaryKeyPositions.length; ++i) {
 				
-				String refAttrName = refSchema.getAttribute(
-						refSchemaPrimaryKeyPositions[i]).getName();
+				Attribute refAttr = refSchema.getAttribute(refSchemaPrimaryKeyPositions[i]);
+				String refAttrName = refAttr.getName();
 				
 				String localAttrName = refToLocalMap.get(refAttrName);
 				if (localAttrName == null) {
@@ -61,6 +61,15 @@ public class Schema {
 				if (localAttrPosition == null) {
 					throw new DatabaseException("Local attribute '"+localAttrName+"' does not exist.");
 				}
+				
+				// type check referenced attr with local attr
+				Attribute.Type refAttrType = refAttr.getType(); 
+				Attribute.Type localAttrType = attributes[localAttrPosition].getType();
+				if (refAttrType != localAttrType) {
+					throw new DatabaseException("Type of local attribute '"+localAttrName+
+							"' does not match that of referenced attribute '"+refAttrName+"'.");
+				}
+								
 				foreignKeyPositions[i] = localAttrPosition;
 			}
 		}
@@ -79,6 +88,7 @@ public class Schema {
 	private int[] primaryKeyPositions;
 	private ForeignKey[] foreignKeys;
 	
+
 	
 	public Schema(CreateCommand command) throws DatabaseException {
 
@@ -118,21 +128,7 @@ public class Schema {
 	
 	
 	public void print() {
-		int rowWidth = 0;
-		for (int i=0; i<attributes.length; ++i) {
-			Attribute attribute = attributes[i];
-			rowWidth += attribute.getPrintWidth();
-			attribute.print();
-			if (i != attributes.length-1) {
-				System.out.print(" ");
-				rowWidth++;
-			}
-		}
-		System.out.println("");
-		for (int i=0; i<rowWidth; ++i) {
-			System.out.print("-");
-		}
-		System.out.println("");
+		Attribute.printColumnHeaders(attributes);
 	}
 	
 	
@@ -141,14 +137,17 @@ public class Schema {
 	}
 
 	public Attribute getAttribute(String attrName) {
-		return attributes[attributesMap.get(attrName)];
+		Integer position = attributesMap.get(attrName);
+		if (position == null)
+			return null;
+		return attributes[position];
 	}
 
 	public Attribute getAttribute(int position) {
 		return attributes[position];
 	}
 	
-	public int getAttributePosition(String attrName) {
+	public Integer getAttributePosition(String attrName) {
 		return attributesMap.get(attrName);
 	}
 	

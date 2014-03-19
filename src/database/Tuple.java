@@ -20,10 +20,14 @@ public class Tuple implements Serializable {
 	}
 	
 	public void print(Schema parentSchema) {
+		print(parentSchema.getAttributes());
+	}
+	
+	public void print(Attribute[] attributes) {
 		for (int i=0; i<values.length; ++i) {
-			Attribute attribute = parentSchema.getAttribute(i);
+			Attribute attribute = attributes[i];
 			int printWidth = attribute.getPrintWidth();
-			Object value = values.length;
+			Object value = values[i];
 			switch (attribute.getType()) {
 			case INT:		// right justify
 				System.out.format("%"+printWidth+"d", (int)value);
@@ -45,7 +49,6 @@ public class Tuple implements Serializable {
 		}
 		System.out.println("");
 	}
-	
 	
 	public Object[] getValues() {
 		return values;

@@ -69,6 +69,23 @@ public class Attribute implements Serializable{
 		}
 	}
 	
+	public static void printColumnHeaders(Attribute[] attributes) {
+		int rowWidth = 0;
+		for (int i=0; i<attributes.length; ++i) {
+			Attribute attribute = attributes[i];
+			rowWidth += attribute.getPrintWidth();
+			attribute.print();
+			if (i != attributes.length-1) {
+				System.out.print(" ");
+				rowWidth++;
+			}
+		}
+		System.out.println("");
+		for (int i=0; i<rowWidth; ++i) {
+			System.out.print("-");
+		}
+		System.out.println("");
+	}
 	
 	private void writeObject(ObjectOutputStream oos) throws IOException {
 		oos.defaultWriteObject();

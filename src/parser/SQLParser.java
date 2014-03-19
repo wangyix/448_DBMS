@@ -84,10 +84,11 @@ TOKEN:
 
         CreateCommand.AttributeDescriptor attributeDescriptor;
         CreateCommand.ForeignKeyDescriptor foreignKeyDescriptor;
+
+        String name;
     jj_consume_token(KW_CREATE);
     jj_consume_token(KW_TABLE);
-    jj_consume_token(IDENTIFIER);
-          tableName = token.image;
+    tableName = Identifier();
     jj_consume_token(49);
     label_1:
     while (true) {
@@ -106,8 +107,8 @@ TOKEN:
     jj_consume_token(KW_PRIMARY);
     jj_consume_token(KW_KEY);
     jj_consume_token(49);
-    jj_consume_token(IDENTIFIER);
-                                                   primaryKeyAttrNames.add(token.image);
+    name = Identifier();
+                                                        primaryKeyAttrNames.add(name);
     label_2:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -119,8 +120,8 @@ TOKEN:
         break label_2;
       }
       jj_consume_token(50);
-      jj_consume_token(IDENTIFIER);
-                                                       primaryKeyAttrNames.add(token.image);
+      name = Identifier();
+                                                            primaryKeyAttrNames.add(name);
     }
     jj_consume_token(51);
     label_3:
@@ -148,8 +149,7 @@ TOKEN:
         Attribute.Type type;
         int length = -1;
         Exp constraint = null;
-    jj_consume_token(IDENTIFIER);
-                           name = token.image;
+    name = Identifier();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case KW_INT:
       jj_consume_token(KW_INT);
@@ -191,11 +191,13 @@ TOKEN:
         String refTableName;
         List<String> localAttrNames = new ArrayList<String>();
         List<String> refAttrNames = new ArrayList<String>();
+
+        String name;
     jj_consume_token(KW_FOREIGN);
     jj_consume_token(KW_KEY);
     jj_consume_token(49);
-    jj_consume_token(IDENTIFIER);
-                           localAttrNames.add(token.image);
+    name = Identifier();
+                                localAttrNames.add(name);
     label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -207,16 +209,15 @@ TOKEN:
         break label_4;
       }
       jj_consume_token(50);
-      jj_consume_token(IDENTIFIER);
-                               localAttrNames.add(token.image);
+      name = Identifier();
+                                    localAttrNames.add(name);
     }
     jj_consume_token(51);
     jj_consume_token(KW_REFERENCES);
-    jj_consume_token(IDENTIFIER);
-                           refTableName = token.image;
+    refTableName = Identifier();
     jj_consume_token(49);
-    jj_consume_token(IDENTIFIER);
-                           refAttrNames.add(token.image);
+    name = Identifier();
+                                refAttrNames.add(name);
     label_5:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -228,8 +229,8 @@ TOKEN:
         break label_5;
       }
       jj_consume_token(50);
-      jj_consume_token(IDENTIFIER);
-                               refAttrNames.add(token.image);
+      name = Identifier();
+                                    refAttrNames.add(name);
     }
     jj_consume_token(51);
           {if (true) return new CreateCommand.ForeignKeyDescriptor(
@@ -240,10 +241,12 @@ TOKEN:
 // DROP TABLE table -----------------------------------------------------------
   final public DropCommand DropTable() throws ParseException {
         DropCommand ret;
+
+        String name;
     jj_consume_token(KW_DROP);
     jj_consume_token(KW_TABLE);
-    jj_consume_token(IDENTIFIER);
-          ret = new DropCommand(token, token.image);
+    name = Identifier();
+          ret = new DropCommand(token, name);
           {if (true) return ret;}
     throw new Error("Missing return statement in function");
   }
@@ -253,12 +256,14 @@ TOKEN:
         List<String> attrNames = null;
         List<String> tables = new ArrayList<String>();
         Exp condition = null;
+
+        String name;
     jj_consume_token(KW_SELECT);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case IDENTIFIER:
-      jj_consume_token(IDENTIFIER);
+      name = Identifier();
                                         attrNames = new ArrayList<String>();
-                                        attrNames.add(token.image);
+                                        attrNames.add(name);
       label_6:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -270,8 +275,8 @@ TOKEN:
           break label_6;
         }
         jj_consume_token(50);
-        jj_consume_token(IDENTIFIER);
-                                               attrNames.add(token.image);
+        name = Identifier();
+                                                        attrNames.add(name);
       }
       break;
     case SYM_STAR:
@@ -283,8 +288,8 @@ TOKEN:
       throw new ParseException();
     }
     jj_consume_token(KW_FROM);
-    jj_consume_token(IDENTIFIER);
-                           tables.add(token.image);
+    name = Identifier();
+                                    tables.add(name);
     label_7:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -296,8 +301,8 @@ TOKEN:
         break label_7;
       }
       jj_consume_token(50);
-      jj_consume_token(IDENTIFIER);
-                               tables.add(token.image);
+      name = Identifier();
+                                        tables.add(name);
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case KW_WHERE:
@@ -314,14 +319,13 @@ TOKEN:
 
 // INSERT INTO table VALUES(val1,...) -----------------------------------------
   final public InsertCommand Insert() throws ParseException {
-        String table;
+        String tableName;
         List<Exp> values = new ArrayList<Exp>();
 
         Exp value;
     jj_consume_token(KW_INSERT);
     jj_consume_token(KW_INTO);
-    jj_consume_token(IDENTIFIER);
-                                                   table = token.image;
+    tableName = Identifier();
     jj_consume_token(KW_VALUES);
     jj_consume_token(49);
     value = Expression();
@@ -341,34 +345,32 @@ TOKEN:
                                          values.add(value);
     }
     jj_consume_token(51);
-          {if (true) return new InsertCommand(token, table, values);}
+          {if (true) return new InsertCommand(token, tableName, values);}
     throw new Error("Missing return statement in function");
   }
 
 // DELETE FROM table WHERE conditions -----------------------------------------
   final public DeleteCommand Delete() throws ParseException {
-        String table;
+        String tableName;
         Exp conditions;
     jj_consume_token(KW_DELETE);
     jj_consume_token(KW_FROM);
-    jj_consume_token(IDENTIFIER);
-                         table = token.image;
+    tableName = Identifier();
     jj_consume_token(KW_WHERE);
     conditions = Expression();
-          {if (true) return new DeleteCommand(token, table, conditions);}
+          {if (true) return new DeleteCommand(token, tableName, conditions);}
     throw new Error("Missing return statement in function");
   }
 
 // UPDATE table SET attr1=val1, ... WHERE conditions --------------------------
   final public UpdateCommand Update() throws ParseException {
-        String table;
+        String tableName;
         List<AttributeAssign > assignments = new ArrayList<AttributeAssign>();
         Exp conditions;
 
         AttributeAssign assignment;
     jj_consume_token(KW_UPDATE);
-    jj_consume_token(IDENTIFIER);
-                                       table = token.image;
+    tableName = Identifier();
     jj_consume_token(KW_SET);
     assignment = AttributeAssignr();
                                                            assignments.add(assignment);
@@ -388,15 +390,18 @@ TOKEN:
     }
     jj_consume_token(KW_WHERE);
     conditions = Expression();
-          {if (true) return new UpdateCommand(token, table, assignments, conditions);}
+          {if (true) return new UpdateCommand(token, tableName, assignments, conditions);}
     throw new Error("Missing return statement in function");
   }
 
   final public AttributeAssign AttributeAssignr() throws ParseException {
         AttributeExp target;
         Exp value;
-    jj_consume_token(IDENTIFIER);
-                         target = new AttributeExp(token, token.image);
+        //System.out.println("AttributeAssignr()");
+
+        String name;
+    name = Identifier();
+                                  target = new AttributeExp(token, name);
     jj_consume_token(SYM_EQUAL);
     value = Expression();
           {if (true) return new AttributeAssign(token, target, value);}
@@ -413,9 +418,10 @@ TOKEN:
 // HELP DESCRIBE table --------------------------------------------------------
   final public HelpDescribeCommand HelpDescribe_suffix() throws ParseException {
         HelpDescribeCommand ret;
+        String tableName;
     jj_consume_token(KW_DESCRIBE);
-    jj_consume_token(IDENTIFIER);
-          ret = new HelpDescribeCommand(token, token.image);
+    tableName = Identifier();
+          ret = new HelpDescribeCommand(token, tableName);
           {if (true) return ret;}
     throw new Error("Missing return statement in function");
   }
@@ -718,6 +724,9 @@ TOKEN:
 
   final public Exp PrimaryExp() throws ParseException {
         Exp ret;
+        //System.out.println("PrimaryExp()");
+
+        String name;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case DECIMAL_LITERAL:
       jj_consume_token(DECIMAL_LITERAL);
@@ -735,9 +744,9 @@ TOKEN:
                         Exp.appendToGlobalExpString(token.image);
       break;
     case IDENTIFIER:
-      jj_consume_token(IDENTIFIER);
-                         ret = new AttributeExp(token, token.image);
-                        Exp.appendToGlobalExpString(token.image);
+      name = Identifier();
+                         ret = new AttributeExp(token, name);
+                        Exp.appendToGlobalExpString(name);
       break;
     case 49:
       jj_consume_token(49);
@@ -752,6 +761,12 @@ TOKEN:
       throw new ParseException();
     }
           {if (true) return ret;}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public String Identifier() throws ParseException {
+    jj_consume_token(IDENTIFIER);
+          {if (true) return token.image.toUpperCase();}
     throw new Error("Missing return statement in function");
   }
 
