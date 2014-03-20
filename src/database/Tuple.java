@@ -8,7 +8,6 @@ public class Tuple implements Serializable {
 
 	private static final long serialVersionUID = 9016548390245302552L;
 	
-	//private Table parentTable;
 	private Object[] values;
 	
 	public Tuple(List<Object> valuesList) {

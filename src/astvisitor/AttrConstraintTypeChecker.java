@@ -15,14 +15,15 @@ public class AttrConstraintTypeChecker extends SimpleASTVisitor{
 	
 	private static AttrConstraintTypeChecker visitor;	// singleton
 	
-	public static void check(CreateCommand.AttributeDescriptor attrDescriptor)
-			throws DatabaseException {
+	
+	
+	public static void verify(String attrName, Attribute.Type attrType,
+			Exp constraint) throws DatabaseException {
 
-		Exp constraint = attrDescriptor.getConstraint();
 		if (constraint != null) {
 			
-			name = attrDescriptor.getName();
-			type = attrDescriptor.getType();
+			name = attrName;
+			type = attrType;
 			attributeReferenced = false;
 			
 			if (visitor == null)

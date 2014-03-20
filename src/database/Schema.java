@@ -1,21 +1,27 @@
 package database;
 
+import java.io.*;
 import java.util.*;
 
-import ast.CreateCommand;
+import ast.*;
 import exception.DatabaseException;
 
-public class Schema {
-	
-	public class ForeignKey{
+public class Schema implements Serializable {
+
+	private static final long serialVersionUID = -6742241104997327934L;
+
+
+	public class ForeignKey implements Serializable {
+		
+		private static final long serialVersionUID = 144383316084225386L;
 		
 		private int[] foreignKeyPositions;	// order corresponds to order of attributes in referenced primary key
-		private Table refTable;
+		private String refTableName;
 		
 		public ForeignKey(CreateCommand.ForeignKeyDescriptor
 			foreignKeyDescriptor) throws DatabaseException {
 			
-			String refTableName = foreignKeyDescriptor.getRefTableName();
+			refTableName = foreignKeyDescriptor.getRefTableName();
 			List<String> refAttrNames = foreignKeyDescriptor.getRefAttrNames();
 			List<String> localAttrNames = foreignKeyDescriptor.getLocalAttrNames();
 
@@ -25,13 +31,25 @@ public class Schema {
 						"number of referenced primary key attributes.");
 			}
 			Map<String, String> refToLocalMap = new HashMap<String, String>();
-			for (int i=0; i<refAttrNames.size(); ++i)
-				refToLocalMap.put(refAttrNames.get(i), localAttrNames.get(i));
+			for (int i=0; i<refAttrNames.size(); ++i) {
+				String refAttrName = refAttrNames.get(i);
+				String localAttrName = localAttrNames.get(i);
+				if (refToLocalMap.containsKey(refAttrName)) {
+					throw new DatabaseException("'"+refAttrName+
+							"' appears multiple times in referenced primary key.");
+				}
+				for (String s : refToLocalMap.values()) {
+					if (s.equals(localAttrName)) {
+						throw new DatabaseException("'"+localAttrName+
+								"' appears multiple times in foreign key.");
+					}
+				}
+				refToLocalMap.put(refAttrName, localAttrName);
+			}
 			
 			Database.verifyExist(refTableName);
-			refTable = Database.getTable(refTableName);
 			
-			Schema refSchema = refTable.getSchema();
+			Schema refSchema = Database.getTable(refTableName).getSchema();
 			int[] refKeyPositions = refSchema.getPrimaryKeyPositions();
 			if (refToLocalMap.size() != refKeyPositions.length) {
 				throw new DatabaseException("Number of foreign key attributes does not match "+
@@ -73,14 +91,17 @@ public class Schema {
 		public int[] getForeignKeyPositions() {
 			return foreignKeyPositions;
 		}
+		public String getRefTableName() {
+			return refTableName;
+		}
 		public Table getRefTable() {
-			return refTable;
+			return Database.getTable(refTableName);
 		}
 	}
 	
 	
 	private Attribute[] attributes;
-	private Map<String, Integer> attributesMap;	// maps attr name to its position
+	private transient Map<String, Integer> attributesMap;	// maps attr name to its position
 	
 	private int[] primaryKeyPositions;
 	private ForeignKey[] foreignKeys;
@@ -97,10 +118,7 @@ public class Schema {
 		}
 		
 		// generate map based on attributes
-		attributesMap = new HashMap<String, Integer>();
-		for (int i=0; i<attributes.length; ++i) {
-			attributesMap.put(attributes[i].getName(), i);
-		}
+		updateAttributesMap();
 		
 		// generate primaryKeyPositions based on primaryKeyAttrNames
 		List<String> primaryKeyAttrNames = command.getPrimaryKeyAttrNames();
@@ -111,6 +129,12 @@ public class Schema {
 			if (position == null) {
 				throw new DatabaseException("Primary key attribute '"+
 						primaryKeyAttrName+"' does not exist.");
+			}
+			for (int j=0; j<i; j++) {
+				if (primaryKeyPositions[j] == position) {
+					throw new DatabaseException("'"+primaryKeyAttrName+
+							"' appears multiple times in primary key.");
+				}
 			}
 			primaryKeyPositions[i] = position;
 		}
@@ -124,8 +148,70 @@ public class Schema {
 	}
 	
 	
-	protected void print() {
+	private void updateAttributesMap() {
+		// generate map based on attributes
+		attributesMap = new HashMap<String, Integer>();
+		for (int i=0; i<attributes.length; ++i) {
+			attributesMap.put(attributes[i].getName(), i);
+		}
+	}
+	
+	
+	protected void printColumnHeaders() {
 		Attribute.printColumnHeaders(attributes);
+	}
+	
+	
+	public void printDescription() {
+		for (Attribute a : attributes){
+			System.out.print(a.getName());		// name
+			switch(a.getType()) {				// type
+			case INT:
+				System.out.print(" -- int");
+				break;
+			case DECIMAL:
+				System.out.print(" -- decimal");
+				break;
+			case CHAR:
+				System.out.print(" -- char("+a.getLength()+")");
+				break;
+			}
+			for (int i=0; i<primaryKeyPositions.length; ++i) {	// primary key
+				if (i==a.getPosition()) {
+					System.out.print(" -- primary key");
+					break;
+				}
+			}
+			for (ForeignKey fk : foreignKeys) {		// foreign key
+				int[] foreignKeyPositions = fk.getForeignKeyPositions();
+				for (int i=0; i<foreignKeyPositions.length; ++i) {
+					if (foreignKeyPositions[i]==a.getPosition()) {
+						Table refTable = fk.getRefTable();
+						Schema refSchema = refTable.getSchema();
+						Attribute refKeyAttr = refSchema.getAttribute(
+								refSchema.getPrimaryKeyPositions()[i]);
+						System.out.print(" -- foreign key references "+
+								refTable.getName()+"("+refKeyAttr.getName()+")");
+					}
+				}
+			}
+			Exp constraint = a.getConstraint();
+			if (constraint != null) {
+				System.out.print(" -- "+constraint.getExpString());
+			}
+			System.out.println("");
+		}
+	}
+	
+	
+	
+	private void writeObject(ObjectOutputStream oos) throws IOException {
+		oos.defaultWriteObject();
+	}
+	private void readObject(ObjectInputStream ois) throws IOException, 
+								ClassNotFoundException {
+		ois.defaultReadObject();
+		updateAttributesMap();
 	}
 	
 	

@@ -28,16 +28,13 @@ public class Attribute implements Serializable{
 	public Attribute(int position, CreateCommand.AttributeDescriptor attrDescriptor)
 			throws DatabaseException {
 		
-		// make sure constraint references this attribute but not others
-		// also make sure this constraint evaluates to a boolean
-		AttrConstraintTypeChecker.check(attrDescriptor);
-		
 		this.position = position;
 		this.name = attrDescriptor.getName();
 		this.type = attrDescriptor.getType();
 		this.length = attrDescriptor.getLength();
 		this.constraint = attrDescriptor.getConstraint();
 		
+		AttrConstraintTypeChecker.verify(name, type, constraint);
 		computePrintWidth();
 	}
 	
@@ -107,6 +104,11 @@ public class Attribute implements Serializable{
 			try {
 				constraint = (new SQLParser(is)).ExpressionFromDisk();
 			} catch (ParseException e) {
+				throw new IOException("Attribute constraint expression corrupted in disk.");
+			}
+			try {
+				AttrConstraintTypeChecker.verify(name, type, constraint);
+			} catch (DatabaseException e) {
 				throw new IOException("Attribute constraint expression corrupted in disk.");
 			}
 		}

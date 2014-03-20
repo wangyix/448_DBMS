@@ -1,5 +1,8 @@
 package database;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.*;
 
 import ast.Exp;
@@ -19,8 +22,20 @@ public class Table {
 		tuples = new ArrayList<Tuple>();
 		iteratorIndex = 0;
 	}
-
 	
+
+	private void verifySchemaCompliance(Tuple tuple) throws DatabaseException {
+		Attribute[] attributes = schema.getAttributes();
+		Object[] values = tuple.getValues();
+		if (values.length != attributes.length) {
+			throw new DatabaseException("Tuple does not have the correct number of values"+
+					" as specified by the schema of table '"+name+"'.");
+		}
+		for (int i=0; i<attributes.length; ++i) {
+			AttrConstraintEvaluator.verifyValueComplies(
+					tuple.getValueAt(i), attributes[i]);
+		}
+	}
 	private void verifyPrimaryKeyUniqueness(Tuple tuple, List<Tuple> existingTuples)
 			throws DatabaseException {
 		
@@ -39,9 +54,6 @@ public class Table {
 			}
 		}
 	}
-	
-	
-	
 	private void verifyForeignKeyConstraints(Tuple tuple) throws DatabaseException {
 		
 		for (Schema.ForeignKey fk : schema.getForeignKeys()) {
@@ -78,24 +90,12 @@ public class Table {
 			}
 		}
 	}
-	
-	
+		
 	
 	public void addTuple(Tuple newTuple) throws DatabaseException {
 		
-		Attribute[] attributes = schema.getAttributes();
-		Object[] values = newTuple.getValues();
-		
-		if (values.length != attributes.length) {
-			throw new DatabaseException("Tuple does not have the correct number of values"+
-					" as specified by the schema of table '"+name+"'.");
-		}
-		
 		// for each value, check if it complies with its attribute's type and constraint
-		for (int i=0; i<attributes.length; ++i) {
-			AttrConstraintEvaluator.verifyValueComplies(
-					newTuple.getValueAt(i), schema.getAttribute(i));
-		}
+		verifySchemaCompliance(newTuple);
 		
 		// check primary key uniqueness constraint
 		verifyPrimaryKeyUniqueness(newTuple, tuples);
@@ -206,8 +206,53 @@ public class Table {
 	
 	
 	
+	// constructor that reads from disk
+	@SuppressWarnings("unchecked")
+	protected Table(ObjectInputStream schemaOis, ObjectInputStream tuplesOis) 
+			throws IOException, ClassNotFoundException {
+		
+		this.name = (String)schemaOis.readObject();
+		this.schema = (Schema)schemaOis.readObject();
+		this.tuples = (ArrayList<Tuple>)tuplesOis.readObject();
+
+		// verify all constraints except referential constraints
+		try {
+			for (Tuple t : tuples)
+				verifySchemaCompliance(t);
+			System.out.println("Table '"+name+"': schema compliance met.");
+			
+			for (int i=0; i<tuples.size(); ++i) 
+				verifyPrimaryKeyUniqueness(tuples.get(i), tuples.subList(0, i));
+			System.out.println("Table '"+name+"': primary key uniqueness constraint met.");
+			
+		} catch (DatabaseException e) {
+			throw new IOException("Table non-referential constraints not met. Possible corruption in disk.");
+		}
+	}
+	// call this after all database tables have been read from disk
+	protected void verifyForeignKeyConstraints() throws IOException {
+		try {
+			for (Tuple t: tuples)
+				verifyForeignKeyConstraints(t);
+			System.out.println("Table '"+name+"': referential integrity constraint met.");
+		} catch (DatabaseException e) {
+			throw new IOException("Table referential constraints not met. Possible corruption in disk.");
+		}
+	}
+	
+	// write to disk
+	protected void writeToDisk(ObjectOutputStream schemaOos, ObjectOutputStream tuplesOos)
+			throws IOException {
+		schemaOos.writeObject(name);
+		schemaOos.writeObject(schema);
+		tuplesOos.writeObject(tuples);
+	}
+	
+
+	
+	
 	public void print() {
-		schema.print();
+		schema.printColumnHeaders();
 		for (Tuple t : tuples) {
 			t.print(schema);
 		}

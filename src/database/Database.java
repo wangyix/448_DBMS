@@ -1,5 +1,6 @@
 package database;
 
+import java.io.*;
 import java.util.*;
 
 import ast.Exp;
@@ -8,6 +9,10 @@ import exception.DatabaseException;
 
 
 public class Database {
+	
+	private static final String schemaFileName = "schemas.ser";
+	private static final String tuplesFileName = "tuples.ser";
+	
 	
 	private static Map<String, Table> tablesMap
 			= new HashMap<String, Table>();			// global
@@ -140,8 +145,8 @@ public class Database {
 			
 			Schema.ForeignKey[] foreignKeys = table.getSchema().getForeignKeys();
 			for (Schema.ForeignKey fk : foreignKeys) {
-				Table refTable = fk.getRefTable();
-				if (refTable == deleteTable) {
+				String refTableName = fk.getRefTableName();
+				if (refTableName.equals(deleteTable.getName())) {
 					throw new DatabaseException("Table '"+table.getName()+"' references this table.");
 				}
 			}
@@ -151,8 +156,47 @@ public class Database {
 	}
 	
 	
+	public static void writeTablesToDisk() throws FileNotFoundException, IOException {
+		ObjectOutputStream schemaOos = new ObjectOutputStream(new FileOutputStream(schemaFileName));
+		ObjectOutputStream tuplesOos = new ObjectOutputStream(new FileOutputStream(tuplesFileName));
+		schemaOos.writeObject(tablesMap.size());
+		for (Table table : tablesMap.values()) {
+			table.writeToDisk(schemaOos, tuplesOos);
+		}
+		schemaOos.close();
+		tuplesOos.close();
+	}
 	
-	public static Table getTable(String tableName) throws DatabaseException {
+	public static void readTablesFromDisk()
+			throws IOException, ClassNotFoundException, FileNotFoundException {
+		
+		tablesMap.clear();
+		
+		ObjectInputStream schemaOis = new ObjectInputStream(new FileInputStream(schemaFileName));
+		ObjectInputStream tuplesOis = new ObjectInputStream(new FileInputStream(tuplesFileName));
+		
+		try {
+			int numTables = ((Integer)schemaOis.readObject()).intValue();
+			for (int i=0; i<numTables; ++i) {
+				Table t = new Table(schemaOis, tuplesOis);
+				tablesMap.put(t.getName(), t);
+			}
+			// check referential constraints of all tables
+			for (Table t : tablesMap.values())
+				t.verifyForeignKeyConstraints();
+			
+		} catch (Exception e) {
+			tablesMap.clear();
+			schemaOis.close();
+			tuplesOis.close();
+			throw e;
+		}
+		schemaOis.close();
+		tuplesOis.close();
+	}
+	
+	
+	public static Table getTable(String tableName) {
 		return tablesMap.get(tableName);
 	}
 	

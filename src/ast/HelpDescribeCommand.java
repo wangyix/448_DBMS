@@ -5,14 +5,14 @@ import exception.DatabaseException;
 import parser.Token;
 
 public class HelpDescribeCommand extends Command {
-	private String table;
+	private String tableName;
 	
-	public HelpDescribeCommand(Token tok, String table) {
+	public HelpDescribeCommand(Token tok, String tableName) {
 		super(tok);
-		this.table = table;
+		this.tableName = tableName;
 	}
 	
-	public String getTable() { return table; }
+	public String getTableName() { return tableName; }
 	
 	public Object accept(ASTVisitor visitor) throws DatabaseException { return visitor.visit(this); }
 }
