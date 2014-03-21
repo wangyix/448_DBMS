@@ -112,35 +112,38 @@ Command Command():
 	//System.out.println("Command()");
 }
 {
-	(		< KW_CREATE >
-		(
-			ret = CreateTable_suffix()
-		|	ret = CreateUser_suffix()
-		|	ret = CreateSubschema_suffix()
-		)
+	(
+		(			< KW_CREATE >
+			(
+				ret = CreateTable_suffix()
+			|	ret = CreateUser_suffix()
+			|	ret = CreateSubschema_suffix()
+			)
+			
+		|	ret = DropTable()
+		|	ret = Select()
+		|	ret = Insert()
 		
-	|	ret = DropTable()
-	|	ret = Select()
-	|	ret = Insert()
-	
-	|	< KW_DELETE >
-		(
-			ret = Delete_suffix()
-		|	ret = DeleteUser_suffix()
-		|	ret = DeleteSubschema_suffix()
-		)
-	|	ret = Update()
-	
-	|	< KW_HELP >
-		(
-			ret = HelpTables_suffix()
-		|	ret = HelpDescribe_suffix()
-		|	ret = HelpCommand_suffix()
-		)
+		|	< KW_DELETE >
+			(
+				ret = Delete_suffix()
+			|	ret = DeleteUser_suffix()
+			|	ret = DeleteSubschema_suffix()
+			)
+		|	ret = Update()
 		
-	|	ret = Quit()
+		|	< KW_HELP >
+			(
+				ret = HelpTables_suffix()
+			|	ret = HelpDescribe_suffix()
+			|	ret = HelpCommand_suffix()
+			)
+			
+		|	ret = Quit()
+		)
+		";"
+	|	< EOF > { ret = new QuitCommand(token); }
 	)
-	";"
 	{ return ret; }
 }
 

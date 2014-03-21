@@ -146,20 +146,27 @@ public class Table {
 		// start a new tuples list
 		List<Tuple> nextTuples = new ArrayList<Tuple>();
 		
-		// find each attribute that's being updated
-		Attribute[] updateAttributes = new Attribute[updateAttrNames.length];
-		for (int i=0; i<updateAttributes.length; ++i) {
-			updateAttributes[i] = schema.getAttribute(updateAttrNames[i]);
-			if (updateAttributes[i] == null) {
+		// find each attribute position that's being updated
+		int[] updatePositions = new int[updateAttrNames.length];
+		for (int i=0; i<updatePositions.length; ++i) {
+			Integer position = schema.getAttributePosition(updateAttrNames[i]);
+			if (position == null) {
 				throw new DatabaseException("Attribute '"+updateAttrNames[i]+
 						"' does not exist.");
+			}
+			updatePositions[i] = position.intValue();
+			for (int j=0; j<i; ++j) {
+				if (updatePositions[j] == updatePositions[i]) {
+					throw new DatabaseException("Attribute '"+updateAttrNames[i]+
+							"' set multiple times.");
+				}
 			}
 		}
 		
 		// make sure each update value complies with its attribute
-		for (int i=0; i<updateAttributes.length; ++i) {
+		for (int i=0; i<updatePositions.length; ++i) {
 			AttrConstraintEvaluator.verifyValueComplies(
-					updateValues[i], updateAttributes[i]);
+					updateValues[i], schema.getAttributes()[updatePositions[i]]);
 		}
 		
 		int numUpdated = 0;
@@ -176,9 +183,8 @@ public class Table {
 			if (ExpEvaluator.evaluateCondition(
 					condition, refTuples, parentSchemas)) {
 				Tuple tCopy = new Tuple(t);
-				for (int i=0; i<updateAttributes.length; ++i) {
-					tCopy.setValueAt(updateAttributes[i].getPosition(),
-							updateValues[i]);
+				for (int i=0; i<updatePositions.length; ++i) {
+					tCopy.setValueAt(updatePositions[i], updateValues[i]);
 				}
 				verifyPrimaryKeyUniqueness(tCopy, nextTuples);
 				nextTuples.add(tCopy);
@@ -257,13 +263,13 @@ public class Table {
 	
 
 	
-	
+	/*
 	public void print() {
 		schema.printColumnHeaders();
 		for (Tuple t : tuples) {
 			t.print(schema);
 		}
-	}
+	}*/
 	
 	
 	public String getName() {

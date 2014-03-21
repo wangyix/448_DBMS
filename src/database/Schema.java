@@ -153,16 +153,20 @@ public class Schema implements Serializable {
 	}
 	
 	
-	private void updateAttributesMap() {
+	private void updateAttributesMap() throws DatabaseException {
 		// generate map based on attributes
 		attributesMap = new HashMap<String, Integer>();
 		for (int i=0; i<attributes.length; ++i) {
+			String attrName = attributes[i].getName();
+			if (attributesMap.containsKey(attrName)) {
+				throw new DatabaseException("Attribute '"+attrName+"' appears multiple times.");
+			}
 			attributesMap.put(attributes[i].getName(), i);
 		}
 	}
 	
 	
-	public void setSubschema(List<String> attrNames) throws DatabaseException {
+	public boolean setSubschema(List<String> attrNames) throws DatabaseException {
 		// find indices of all the attributes
 		SortedSet<Integer> positions = new TreeSet<Integer>();
 		for (int i=0; i<attrNames.size(); ++i) {
@@ -172,12 +176,22 @@ public class Schema implements Serializable {
 				throw new DatabaseException("Attribute '"+
 						attrName+"' does not exist.");
 			}
-			positions.add(position);
+			if (!positions.add(position)) {
+				throw new DatabaseException("Attribute '"+attrName+"' included multiple times.");
+			}
 		}
+		if (positions.size() == attributes.length) {
+			throw new DatabaseException("All attributes of table are included.");
+		}
+		boolean noPrevSubschema = (visiblePositions.size() == attributes.length);
 		visiblePositions = positions;
+		return noPrevSubschema;
 	}
 	
-	public void deleteSubschema() {
+	public void deleteSubschema() throws DatabaseException {
+		if (visiblePositions.size() == attributes.length) {
+			throw new DatabaseException("No subschema exists for this table.");
+		}
 		// set all attributes visible
 		for (int i=0; i<attributes.length; ++i)
 			visiblePositions.add(i);
@@ -256,7 +270,11 @@ public class Schema implements Serializable {
 				throw new IOException("Attribute position field corrupted in disk.");
 			}
 		}
-		updateAttributesMap();
+		try {
+			updateAttributesMap();
+		} catch (DatabaseException e) {
+			throw new IOException("Attribute names corrupted in disk (repeats found).");
+		}
 	}
 	
 	
@@ -270,6 +288,10 @@ public class Schema implements Serializable {
 		if (position == null)
 			return null;
 		return attributes[position];
+	}
+	
+	public Integer getAttributePosition(String attrName) {
+		return attributesMap.get(attrName);
 	}
 	
 	

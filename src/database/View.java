@@ -16,14 +16,19 @@ public class View {
 		tuples.add(newTuple);
 	}
 	
-	public void print() {
+	public int print() {
 		if (attributes.length == 0) {
 			System.out.println("No columns selected.");
-		} else {
-			Attribute.printColumnHeaders(attributes);
-			for (Tuple t : tuples) {
-				t.print(attributes);
-			}
+			return 0;
 		}
+		for (int i=0; i<tuples.size(); ++i) {
+			if (i%10 == 0) {
+				if (i > 0)
+					System.out.println("");
+				Attribute.printColumnHeaders(attributes);
+			}
+			tuples.get(i).print(attributes);
+		}
+		return tuples.size();
 	}
 }

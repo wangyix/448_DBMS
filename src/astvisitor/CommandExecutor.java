@@ -56,8 +56,12 @@ public class CommandExecutor extends SimpleASTVisitor{
 		Database.verifyExist(tableName);
 		Table table = Database.getTable(tableName);
 		
-		table.getSchema().setSubschema(command.getAttrNames());
-		System.out.println("\nSubschema for table '"+tableName+"' created.");
+		boolean noPrevSubschema = table.getSchema()
+				.setSubschema(command.getAttrNames());
+		if (noPrevSubschema)
+			System.out.println("\nSubschema for table '"+tableName+"' created.");
+		else
+			System.out.println("\nSubschema for table '"+tableName+"' updated.");
 		return false;
 	}
 	
@@ -130,7 +134,8 @@ public class CommandExecutor extends SimpleASTVisitor{
 		View view = Database.createView(attrNames, tableNames, command.getcondition());
 		
 		System.out.println("");
-		view.print();
+		int rowsPrinted = view.print();
+		System.out.println("\n"+rowsPrinted+" rows selected.");
 		return false;
 	}
 	
