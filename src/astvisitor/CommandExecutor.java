@@ -135,7 +135,10 @@ public class CommandExecutor extends SimpleASTVisitor{
 		
 		System.out.println("");
 		int rowsPrinted = view.print();
-		System.out.println("\n"+rowsPrinted+" rows selected.");
+		if (rowsPrinted == 1)
+			System.out.println("\n1 row selected.");
+		else
+			System.out.println("\n"+rowsPrinted+" rows selected.");
 		return false;
 	}
 	
@@ -175,7 +178,10 @@ public class CommandExecutor extends SimpleASTVisitor{
 		Table table = Database.getTable(tableName);
 		
 		int numDeleted = table.deleteTuples(command.getCondition());
-		System.out.println("\n"+numDeleted+" tuples deleted.");
+		if (numDeleted == 1)
+			System.out.println("\n1 tuple deleted");
+		else
+			System.out.println("\n"+numDeleted+" tuples deleted.");
 		return false;
 	}
 	
@@ -200,8 +206,12 @@ public class CommandExecutor extends SimpleASTVisitor{
 			updateValues[i] = ExpEvaluator.evaluate(ud.getValue(), null, null);
 		}
 		
-		int numUpdated = table.updateTuples(command.getCondition(), updateAttrNames, updateValues);
-		System.out.println("\n"+numUpdated+" tuples updated.");
+		int numUpdated = table.updateTuples(command.getCondition(),
+				updateAttrNames, updateValues);
+		if (numUpdated == 1)
+			System.out.println("\n1 tuple updated.");
+		else
+			System.out.println("\n"+numUpdated+" tuples updated.");
 		return false;
 	}
 	
