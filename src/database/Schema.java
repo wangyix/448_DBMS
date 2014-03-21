@@ -18,7 +18,7 @@ public class Schema implements Serializable {
 		private int[] foreignKeyPositions;	// order corresponds to order of attributes in referenced primary key
 		private String refTableName;
 		
-		public ForeignKey(CreateCommand.ForeignKeyDescriptor
+		public ForeignKey(CreateTableCommand.ForeignKeyDescriptor
 			foreignKeyDescriptor) throws DatabaseException {
 			
 			refTableName = foreignKeyDescriptor.getRefTableName();
@@ -58,12 +58,10 @@ public class Schema implements Serializable {
 			
 			// find the local attr positions corresponding to each key attribute of the
 			// referenced table
-			
 			foreignKeyPositions = new int[refKeyPositions.length];	
-			//for (Integer pos : refSchema.getPrimaryKeyPositions()) {
 			for (int i=0; i<refKeyPositions.length; ++i) {
 				
-				Attribute refAttr = refSchema.getAttribute(refKeyPositions[i]);
+				Attribute refAttr = refSchema.getAttributes()[refKeyPositions[i]];
 				String refAttrName = refAttr.getName();
 				
 				String localAttrName = refToLocalMap.get(refAttrName);
@@ -106,12 +104,13 @@ public class Schema implements Serializable {
 	private int[] primaryKeyPositions;
 	private ForeignKey[] foreignKeys;
 	
+	private transient SortedSet<Integer> visiblePositions;
 
 	
-	public Schema(CreateCommand command) throws DatabaseException {
+	public Schema(CreateTableCommand command) throws DatabaseException {
 
 		// create the attributes based on AttributeDescriptors
-		List<CreateCommand.AttributeDescriptor> attrDescriptors = command.getAttributeDescriptors();
+		List<CreateTableCommand.AttributeDescriptor> attrDescriptors = command.getAttributeDescriptors();
 		attributes = new Attribute[attrDescriptors.size()];
 		for (int i=0; i<attrDescriptors.size(); ++i) {
 			attributes[i] = new Attribute(i, attrDescriptors.get(i));
@@ -139,12 +138,18 @@ public class Schema implements Serializable {
 			primaryKeyPositions[i] = position;
 		}
 		
-		List<CreateCommand.ForeignKeyDescriptor> foreignKeyDescriptors = 
+		// generate foreign keys based on foreignKeyDescriptors
+		List<CreateTableCommand.ForeignKeyDescriptor> foreignKeyDescriptors = 
 				command.getForeignKeyDescriptors();
 		foreignKeys = new ForeignKey[foreignKeyDescriptors.size()];
 		for (int i=0; i<foreignKeys.length; ++i) {
 			foreignKeys[i] = new ForeignKey(foreignKeyDescriptors.get(i));
 		}
+		
+		// there is no subschema initially (all attributes visible)
+		visiblePositions = new TreeSet<Integer>();
+		for (int i=0; i<attributes.length; ++i)
+			visiblePositions.add(i);
 	}
 	
 	
@@ -157,13 +162,35 @@ public class Schema implements Serializable {
 	}
 	
 	
+	public void setSubschema(List<String> attrNames) throws DatabaseException {
+		// find indices of all the attributes
+		SortedSet<Integer> positions = new TreeSet<Integer>();
+		for (int i=0; i<attrNames.size(); ++i) {
+			String attrName = attrNames.get(i);
+			Integer position = attributesMap.get(attrName);
+			if (position == null) {
+				throw new DatabaseException("Attribute '"+
+						attrName+"' does not exist.");
+			}
+			positions.add(position);
+		}
+		visiblePositions = positions;
+	}
+	
+	public void deleteSubschema() {
+		// set all attributes visible
+		for (int i=0; i<attributes.length; ++i)
+			visiblePositions.add(i);
+	}
+	
+	
 	protected void printColumnHeaders() {
 		Attribute.printColumnHeaders(attributes);
 	}
 	
 	
 	public void printDescription() {
-		for (Attribute a : attributes){
+		for (Attribute a : getVisibleAttributes()){
 			System.out.print(a.getName());		// name
 			switch(a.getType()) {				// type
 			case INT:
@@ -188,10 +215,12 @@ public class Schema implements Serializable {
 					if (foreignKeyPositions[i]==a.getPosition()) {
 						Table refTable = fk.getRefTable();
 						Schema refSchema = refTable.getSchema();
-						Attribute refKeyAttr = refSchema.getAttribute(
-								refSchema.getPrimaryKeyPositions()[i]);
+						int refAttrPosition = refSchema.getPrimaryKeyPositions()[i];
+						String refAttrName = "*****";
+						if (refSchema.isPositionVisible(refAttrPosition))
+							refAttrName = refSchema.getAttributes()[refAttrPosition].getName();
 						System.out.print(" -- foreign key references "+
-								refTable.getName()+"("+refKeyAttr.getName()+")");
+							refTable.getName()+"("+refAttrName+")");
 					}
 				}
 			}
@@ -207,37 +236,95 @@ public class Schema implements Serializable {
 	
 	private void writeObject(ObjectOutputStream oos) throws IOException {
 		oos.defaultWriteObject();
+		int[] vpArray = new int[visiblePositions.size()];
+		int i = 0;
+		for (int p : visiblePositions)
+			vpArray[i++] = p;
+		oos.writeObject(vpArray);
 	}
 	private void readObject(ObjectInputStream ois) throws IOException, 
 								ClassNotFoundException {
 		ois.defaultReadObject();
+		// reconstruct visiblePositions from array
+		int[] vpArray = (int[])ois.readObject();
+		visiblePositions = new TreeSet<Integer>();
+		for (int p : vpArray)
+			visiblePositions.add(p);
+		// verify each attribute's position matches its actual position
+		for (int i=0; i<attributes.length; ++i) {
+			if (attributes[i].getPosition() != i) {
+				throw new IOException("Attribute position field corrupted in disk.");
+			}
+		}
 		updateAttributesMap();
 	}
+	
 	
 	
 	public Attribute[] getAttributes() {
 		return attributes;
 	}
-
+	
 	public Attribute getAttribute(String attrName) {
-		Integer position = attributesMap.get(attrName);
+		Integer position =  attributesMap.get(attrName);
 		if (position == null)
 			return null;
 		return attributes[position];
 	}
+	
+	
+	// methods involving visibility checks
+	
+	public Attribute getVisibleAttribute(String attrName) {
+		Integer position = attributesMap.get(attrName);
+		if (position == null)
+			return null;
+		if (Users.currentUserIsTypeB() && !visiblePositions.contains(position))
+			return null;
+		return attributes[position.intValue()];
+	}
+	
+	public Integer getVisibleAttributePosition(String attrName) {
+		Integer position =  attributesMap.get(attrName);
+		if (position == null)
+			return null;
+		if (Users.currentUserIsTypeB() && !visiblePositions.contains(position))
+			return null;
+		return position;
+	}
 
-	public Attribute getAttribute(int position) {
-		return attributes[position];
+	public int getNumVisibleAttributes() {
+		if (Users.currentUserIsTypeB()) {
+			return visiblePositions.size();
+		}
+		return attributes.length;
 	}
 	
-	public Integer getAttributePosition(String attrName) {
-		return attributesMap.get(attrName);
+	public Attribute[] getVisibleAttributes() {
+		if (Users.currentUserIsTypeB()) {
+			Attribute[] visibleAttributes = new Attribute[visiblePositions.size()];
+			int i = 0;
+			for (int pos : visiblePositions) {
+				visibleAttributes[i++] = attributes[pos];
+			}
+			return visibleAttributes;
+		}
+		return attributes;
 	}
 	
+	public boolean isPositionVisible(int position) {
+		if (Users.currentUserIsTypeB()) {
+			return visiblePositions.contains(position);
+		}
+		return true;
+	}
+	
+	
+	
+		
 	public int[] getPrimaryKeyPositions() {
 		return primaryKeyPositions;
 	}
-
 
 	public ForeignKey[] getForeignKeys() {
 		return foreignKeys;

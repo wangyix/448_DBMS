@@ -57,39 +57,47 @@ public interface SQLParserConstants {
   /** RegularExpression Id. */
   int KW_QUIT = 30;
   /** RegularExpression Id. */
-  int KW_INT = 31;
+  int KW_USER = 31;
   /** RegularExpression Id. */
-  int KW_CHAR = 32;
+  int KW_USERA = 32;
   /** RegularExpression Id. */
-  int KW_DECIMAL = 33;
+  int KW_USERB = 33;
   /** RegularExpression Id. */
-  int SYM_PLUS = 34;
+  int KW_SUBSCHEMA = 34;
   /** RegularExpression Id. */
-  int SYM_MINUS = 35;
+  int KW_INT = 35;
   /** RegularExpression Id. */
-  int SYM_STAR = 36;
+  int KW_CHAR = 36;
   /** RegularExpression Id. */
-  int SYM_SLASH = 37;
+  int KW_DECIMAL = 37;
   /** RegularExpression Id. */
-  int SYM_EQUAL = 38;
+  int SYM_PLUS = 38;
   /** RegularExpression Id. */
-  int SYM_EXCLEQUAL = 39;
+  int SYM_MINUS = 39;
   /** RegularExpression Id. */
-  int SYM_LESS = 40;
+  int SYM_STAR = 40;
   /** RegularExpression Id. */
-  int SYM_MORE = 41;
+  int SYM_SLASH = 41;
   /** RegularExpression Id. */
-  int SYM_LESSEQUAL = 42;
+  int SYM_EQUAL = 42;
   /** RegularExpression Id. */
-  int SYM_MOREEQUAL = 43;
+  int SYM_EXCLEQUAL = 43;
   /** RegularExpression Id. */
-  int IDENTIFIER = 44;
+  int SYM_LESS = 44;
   /** RegularExpression Id. */
-  int INT_LITERAL = 45;
+  int SYM_MORE = 45;
   /** RegularExpression Id. */
-  int DECIMAL_LITERAL = 46;
+  int SYM_LESSEQUAL = 46;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 47;
+  int SYM_MOREEQUAL = 47;
+  /** RegularExpression Id. */
+  int IDENTIFIER = 48;
+  /** RegularExpression Id. */
+  int INT_LITERAL = 49;
+  /** RegularExpression Id. */
+  int DECIMAL_LITERAL = 50;
+  /** RegularExpression Id. */
+  int STRING_LITERAL = 51;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -127,6 +135,10 @@ public interface SQLParserConstants {
     "\"TABLES\"",
     "\"DESCRIBE\"",
     "\"QUIT\"",
+    "\"USER\"",
+    "\"USER-A\"",
+    "\"USER-B\"",
+    "\"SUBSCHEMA\"",
     "\"int\"",
     "\"char\"",
     "\"decimal\"",
@@ -145,8 +157,8 @@ public interface SQLParserConstants {
     "<DECIMAL_LITERAL>",
     "<STRING_LITERAL>",
     "\";\"",
-    "\"(\"",
     "\",\"",
+    "\"(\"",
     "\")\"",
   };
 

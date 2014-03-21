@@ -57,6 +57,11 @@ TOKEN [IGNORE_CASE]:
 |	< KW_DESCRIBE: "DESCRIBE" >
 |	< KW_QUIT: "QUIT" >
 
+|	< KW_USER: "USER" >
+|	< KW_USERA: "USER-A" >
+|	< KW_USERB: "USER-B" >
+|	< KW_SUBSCHEMA: "SUBSCHEMA" >
+
 |	< KW_INT: "int" >
 |	< KW_CHAR: "char" >
 |	< KW_DECIMAL: "decimal" >
@@ -107,43 +112,107 @@ Command Command():
 	//System.out.println("Command()");
 }
 {
-	(		ret = CreateTable()
+	(		< KW_CREATE >
+		(
+			ret = CreateTable_suffix()
+		|	ret = CreateUser_suffix()
+		|	ret = CreateSubschema_suffix()
+		)
+		
 	|	ret = DropTable()
 	|	ret = Select()
 	|	ret = Insert()
-	|	ret = Delete()
+	
+	|	< KW_DELETE >
+		(
+			ret = Delete_suffix()
+		|	ret = DeleteUser_suffix()
+		|	ret = DeleteSubschema_suffix()
+		)
 	|	ret = Update()
+	
 	|	< KW_HELP >
 		(
 			ret = HelpTables_suffix()
 		|	ret = HelpDescribe_suffix()
 		|	ret = HelpCommand_suffix()
 		)
+		
 	|	ret = Quit()
 	)
 	";"
 	{ return ret; }
 }
 
-// CREATE TABLE ( ... ) -------------------------------------------------------
-CreateCommand CreateTable():
+// admin commands *****************************************************************************************************
+// ********************************************************************************************************************
+
+// CREATE USER ----------------------------------------------------------------
+CreateUserCommand CreateUser_suffix():
+{	String userName;
+	Users.Type userType;
+}
+{
+	< KW_USER > ( userName = IdentifierWithCase() )
+	(		< KW_USERA > { userType = Users.Type.USER_A; }
+	|	< KW_USERB > { userType = Users.Type.USER_B; }	)	{ return new CreateUserCommand(token, userName, userType); }
+}
+
+// DELETE USER ----------------------------------------------------------------
+DeleteUserCommand DeleteUser_suffix():
+{
+	String userName;
+}
+{
+	< KW_USER > ( userName = IdentifierWithCase() )
+	{ return new DeleteUserCommand(token, userName); }
+}
+
+// CREATE SUBSCHEMA -----------------------------------------------------------
+CreateSubschemaCommand CreateSubschema_suffix():
+{	String tableName;
+	List<String> attrNames = new ArrayList<String>();
+
+	String attrName;
+}
+{	< KW_SUBSCHEMA > ( tableName = Identifier() )
+	( ( attrName = Identifier() ) { attrNames.add(attrName); } )	( "," ( attrName = Identifier() ) { attrNames.add(attrName); } )*
+	{ return new CreateSubschemaCommand(token, tableName, attrNames); }
+}
+// DELETE SUBSCHEMA -----------------------------------------------------------		 
+DeleteSubschemaCommand DeleteSubschema_suffix():
 {
 	String tableName;
-	List<CreateCommand.AttributeDescriptor> attributeDescriptors
-			= new ArrayList<CreateCommand.AttributeDescriptor>();
-	List<String> primaryKeyAttrNames = new ArrayList<String>();
-	List<CreateCommand.ForeignKeyDescriptor> foreignKeyDescriptors
-		 = new ArrayList<CreateCommand.ForeignKeyDescriptor>();
+}
+{
+	< KW_SUBSCHEMA > ( tableName = Identifier() )
+	{ return new DeleteSubschemaCommand(token, tableName); }
+}
 
-	CreateCommand.AttributeDescriptor attributeDescriptor;
-	CreateCommand.ForeignKeyDescriptor foreignKeyDescriptor;
+
+// SQL commands *******************************************************************************************************
+// ********************************************************************************************************************
+
+
+// CREATE TABLE ( ... ) -------------------------------------------------------
+CreateTableCommand CreateTable_suffix():
+{
+	String tableName;
+	List<CreateTableCommand.AttributeDescriptor> attributeDescriptors
+			= new ArrayList<CreateTableCommand.AttributeDescriptor>();
+	List<String> primaryKeyAttrNames = new ArrayList<String>();
+	List<CreateTableCommand.ForeignKeyDescriptor> foreignKeyDescriptors
+		 = new ArrayList<CreateTableCommand.ForeignKeyDescriptor>();
+
+	CreateTableCommand.AttributeDescriptor attributeDescriptor;
+	CreateTableCommand.ForeignKeyDescriptor foreignKeyDescriptor;
 
 	String name;
 	
 	//System.out.println("CreateTable()");
 }
 {
-	< KW_CREATE > < KW_TABLE > ( tableName = Identifier() )
+	< KW_TABLE > ( tableName = Identifier() )
 	"("
 	(
 		(
@@ -159,11 +228,11 @@ CreateCommand CreateTable():
 			"," ( foreignKeyDescriptor = ForeignKeyDecl() )
 			{ foreignKeyDescriptors.add(foreignKeyDescriptor); }
 		)*	)
-	")"	{ return new CreateCommand(token, tableName, attributeDescriptors,
+	")"	{ return new CreateTableCommand(token, tableName, attributeDescriptors,
 					primaryKeyAttrNames, foreignKeyDescriptors); }
 }
 
-CreateCommand.AttributeDescriptor AttrDecl():
+CreateTableCommand.AttributeDescriptor AttrDecl():
 {
 	String name;
 	Attribute.Type type;
@@ -187,9 +256,9 @@ CreateCommand.AttributeDescriptor AttrDecl():
 		"(" (
 				constraint = Expression()
 		) ")"	)?
-	{ return new CreateCommand.AttributeDescriptor(name, type, length, constraint); }}
+	{ return new CreateTableCommand.AttributeDescriptor(name, type, length, constraint); }}
 
-CreateCommand.ForeignKeyDescriptor ForeignKeyDecl():
+CreateTableCommand.ForeignKeyDescriptor ForeignKeyDecl():
 {	String refTableName;
 	List<String> localAttrNames = new ArrayList<String>();
 	List<String> refAttrNames = new ArrayList<String>();
@@ -208,13 +277,13 @@ CreateCommand.ForeignKeyDescriptor ForeignKeyDecl():
 	( name = Identifier() { refAttrNames.add(name); } )
 	( "," name = Identifier() { refAttrNames.add(name); } )*
 	")"
-	{ return new CreateCommand.ForeignKeyDescriptor(
+	{ return new CreateTableCommand.ForeignKeyDescriptor(
 		refTableName, localAttrNames, refAttrNames); }}
 
 // DROP TABLE table -----------------------------------------------------------
-DropCommand DropTable():
+DropTableCommand DropTable():
 {
-	DropCommand ret;
+	DropTableCommand ret;
 
 	String name;
 	
@@ -222,7 +291,7 @@ DropCommand DropTable():
 }
 {
 	< KW_DROP > < KW_TABLE > ( name = Identifier() )
-	{ ret = new DropCommand(token, name); }
+	{ ret = new DropTableCommand(token, name); }
 	{ return ret; }
 }
 
@@ -281,7 +350,7 @@ InsertCommand Insert():
 
 
 // DELETE FROM table WHERE conditions -----------------------------------------
-DeleteCommand Delete():
+DeleteCommand Delete_suffix():
 {
 	String tableName;
 	Exp condition = null;
@@ -289,7 +358,7 @@ DeleteCommand Delete():
 	//System.out.println("Delete()");
 }
 {
-	< KW_DELETE > < KW_FROM >	( tableName = Identifier() )
+	< KW_FROM >	( tableName = Identifier() )
 	( < KW_WHERE > ( condition = Expression() ) )?
 	{ return new DeleteCommand(token, tableName, condition); }
 }
@@ -390,6 +459,8 @@ QuitCommand Quit():
 {
 	< KW_QUIT >	{ return new QuitCommand(token); }
 }
+
+
 
 
 // Expression from disk *******************************************************
@@ -600,4 +671,11 @@ String Identifier():
 {
 	< IDENTIFIER >
 	{ return token.image.toUpperCase(); }
+}
+
+String IdentifierWithCase():
+{}
+{
+	< IDENTIFIER >
+	{ return token.image; }
 }

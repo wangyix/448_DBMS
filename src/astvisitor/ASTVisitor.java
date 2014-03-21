@@ -9,9 +9,13 @@ public abstract class ASTVisitor {
 	public abstract Object visit(AttributeExp node) throws DatabaseException;
 	public abstract Object visit(BinaryExp node) throws DatabaseException;
 	public abstract Object visit(Command node) throws DatabaseException;
-	public abstract Object visit(CreateCommand node) throws DatabaseException;
+	public abstract Object visit(CreateSubschemaCommand node) throws DatabaseException;
+	public abstract Object visit(CreateTableCommand node) throws DatabaseException;
+	public abstract Object visit(CreateUserCommand node) throws DatabaseException;
 	public abstract Object visit(DeleteCommand node) throws DatabaseException;
-	public abstract Object visit(DropCommand node) throws DatabaseException;
+	public abstract Object visit(DeleteSubschemaCommand node) throws DatabaseException;
+	public abstract Object visit(DeleteUserCommand node) throws DatabaseException;
+	public abstract Object visit(DropTableCommand node) throws DatabaseException;
 	public abstract Object visit(Exp node) throws DatabaseException;
 	public abstract Object visit(HelpCommandCommand node) throws DatabaseException;
 	public abstract Object visit(HelpDescribeCommand node) throws DatabaseException;
@@ -32,9 +36,13 @@ public abstract class ASTVisitor {
 		@Override public Object visit(AttributeExp node)  throws DatabaseException { return defaultVisit(node); }
 		@Override public Object visit(BinaryExp node)  throws DatabaseException { return defaultVisit(node); }
 		@Override public Object visit(Command node)  throws DatabaseException { return defaultVisit(node); }
-		@Override public Object visit(CreateCommand node)  throws DatabaseException { return defaultVisit(node); }
+		@Override public Object visit(CreateSubschemaCommand node)  throws DatabaseException { return defaultVisit(node); }
+		@Override public Object visit(CreateTableCommand node)  throws DatabaseException { return defaultVisit(node); }
+		@Override public Object visit(CreateUserCommand node)  throws DatabaseException { return defaultVisit(node); }
 		@Override public Object visit(DeleteCommand node)  throws DatabaseException { return defaultVisit(node); }
-		@Override public Object visit(DropCommand node) throws DatabaseException { return defaultVisit(node); }
+		@Override public Object visit(DeleteSubschemaCommand node)  throws DatabaseException { return defaultVisit(node); }
+		@Override public Object visit(DeleteUserCommand node)  throws DatabaseException { return defaultVisit(node); }
+		@Override public Object visit(DropTableCommand node) throws DatabaseException { return defaultVisit(node); }
 		@Override public Object visit(Exp node) throws DatabaseException { return defaultVisit(node); }
 		@Override public Object visit(HelpCommandCommand node) throws DatabaseException { return defaultVisit(node); }
 		@Override public Object visit(HelpDescribeCommand node) throws DatabaseException { return defaultVisit(node); }

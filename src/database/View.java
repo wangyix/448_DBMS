@@ -17,9 +17,13 @@ public class View {
 	}
 	
 	public void print() {
-		Attribute.printColumnHeaders(attributes);
-		for (Tuple t : tuples) {
-			t.print(attributes);
+		if (attributes.length == 0) {
+			System.out.println("No columns selected.");
+		} else {
+			Attribute.printColumnHeaders(attributes);
+			for (Tuple t : tuples) {
+				t.print(attributes);
+			}
 		}
 	}
 }

@@ -37,49 +37,52 @@ public class Database {
 			String tableName = tableNames[i];
 			Database.verifyExist(tableName);
 			tables[i] = Database.getTable(tableName);
-			if (tables[i].getTuples().isEmpty()) {
-				throw new DatabaseException("Table '"+tableName+"' is empty.");
-			}
 			schemas[i] = tables[i].getSchema();
 		}
 		
-		// find and record the table and column-position of each selected attribute		
-		if (attrNames == null) {	// add all attributes from all tables if SELECT *
+		// find and record the table and column-position of each selected attribute
+		// add all attributes from all tables if SELECT *
+		// otherwise, only add attributes specified in the SELECT
+		
+		if (attrNames == null) {
 			int totalNumAttributes = 0;
 			for (Schema s : schemas) 
-				totalNumAttributes += s.getAttributes().length;
+				totalNumAttributes += s.getNumVisibleAttributes();
 			
 			attributes = new Attribute[totalNumAttributes];
 			attrTableIndex = new int[attributes.length];
 			
 			int attributeIndex = 0;
 			for (int tableIndex=0; tableIndex<tables.length; ++tableIndex) {
-				Attribute[] schemaAttributes = schemas[tableIndex].getAttributes();
-				for (int i=0; i<schemaAttributes.length; ++i) {
-					attributes[attributeIndex] = schemaAttributes[i];
+				Attribute[] schemaAttributes = schemas[tableIndex].getVisibleAttributes();
+				for (Attribute a : schemaAttributes) {
+					attributes[attributeIndex] = a;
 					attrTableIndex[attributeIndex] = tableIndex;
 					attributeIndex++;
 				}
 			}
 			
-		} else {				// otherwise, add attributes specified in the SELECT
+		} else {
 			attributes = new Attribute[attrNames.length];
 			attrTableIndex = new int[attributes.length];		
 			for (int i=0; i<attributes.length; ++i) {
-				
 				String attrName = attrNames[i];
 				boolean attrFound = false;
-				
 				for (int tableIndex=0; tableIndex<tables.length; ++tableIndex) {
-					attributes[i] = schemas[tableIndex].getAttribute(attrName);
-					if (attributes[i] != null) {
-						attrTableIndex[i] = tableIndex;
-						attrFound = true;
-						break;
+					 Attribute attribute = schemas[tableIndex].getVisibleAttribute(attrName);
+					if (attribute != null) {
+						if (!attrFound) {
+							attributes[i] = attribute;
+							attrTableIndex[i] = tableIndex;
+							attrFound = true;
+						} else {
+							throw new DatabaseException("Attribute '"+attrName+
+									"' found in multiple tables.");
+						}
 					}
 				}
 				if (!attrFound) {
-					throw new DatabaseException("Selected attribute '"+attrName+"' not found "+
+					throw new DatabaseException("Attribute '"+attrName+"' not found "+
 							"in any of the specified tables.");
 				}
 			}
@@ -94,6 +97,9 @@ public class Database {
 		currentTupleCombo = new Tuple[tables.length];
 		for (int i=0; i<tables.length; ++i) {
 			tables[i].resetIterator();
+			if (!tables[i].hasNext()) {	// if any table empty, leave view empty
+				return view;
+			}
 			currentTupleCombo[i] = tables[i].getNextTuple();
 		}
 		// iterate thru all combinations of rows
@@ -187,8 +193,6 @@ public class Database {
 			
 		} catch (Exception e) {
 			tablesMap.clear();
-			schemaOis.close();
-			tuplesOis.close();
 			throw e;
 		}
 		schemaOis.close();

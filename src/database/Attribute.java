@@ -23,9 +23,9 @@ public class Attribute implements Serializable{
 	private transient Exp constraint;	// cannot reference other attributes
 	
 	private transient int printWidth;
+
 	
-	
-	public Attribute(int position, CreateCommand.AttributeDescriptor attrDescriptor)
+	public Attribute(int position, CreateTableCommand.AttributeDescriptor attrDescriptor)
 			throws DatabaseException {
 		
 		this.position = position;

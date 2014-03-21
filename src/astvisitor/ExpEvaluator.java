@@ -54,11 +54,15 @@ public class ExpEvaluator extends Evaluator {
 		String attrName = node.getName();
 		boolean attrFound = false;
 		for (int i=0; i<tuples.length; ++i) {
-			Integer position = schemas[i].getAttributePosition(attrName);
+			Integer position = schemas[i].getVisibleAttributePosition(attrName);
 			if (position != null) {
-				attrFound = true;
-				ret = tuples[i].getValueAt(position);
-				break;
+				if (!attrFound) {
+					ret = tuples[i].getValueAt(position);
+					attrFound = true;
+				} else {
+					throw new DatabaseException("Attribute '"+attrName+
+							"' found in multiple tables.");
+				}
 			}
 		}
 		if (!attrFound) {

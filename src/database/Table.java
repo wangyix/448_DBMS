@@ -28,8 +28,7 @@ public class Table {
 		Attribute[] attributes = schema.getAttributes();
 		Object[] values = tuple.getValues();
 		if (values.length != attributes.length) {
-			throw new DatabaseException("Tuple does not have the correct number of values"+
-					" as specified by the schema of table '"+name+"'.");
+			throw new DatabaseException("Tuple does not have the correct number of values.");
 		}
 		for (int i=0; i<attributes.length; ++i) {
 			AttrConstraintEvaluator.verifyValueComplies(
@@ -110,11 +109,12 @@ public class Table {
 	
 	
 	
-	public void deleteTuples(Exp condition) throws DatabaseException {
+	public int deleteTuples(Exp condition) throws DatabaseException {
 		
 		if (condition == null) {
+			int numDeleted = tuples.size();
 			tuples.clear();
-			return;
+			return numDeleted;
 		}
 		
 		// start a new tuples list
@@ -134,11 +134,13 @@ public class Table {
 			 *	// propagate delete, not necessary for this project
 			}*/
 		}
+		int numDeleted = tuples.size() - nextTuples.size();
 		tuples = nextTuples;
+		return numDeleted;
 	}
 	
 	
-	public void updateTuples(Exp condition, String[] updateAttrNames,
+	public int updateTuples(Exp condition, String[] updateAttrNames,
 				Object[] updateValues) throws DatabaseException {
 		
 		// start a new tuples list
@@ -160,6 +162,8 @@ public class Table {
 					updateValues[i], updateAttributes[i]);
 		}
 		
+		int numUpdated = 0;
+		
 		// go through old tuples and find those that pass condition
 		// add them to new tuple, then run a primary key uniqueness check
 		Tuple[] refTuples = new Tuple[1];
@@ -178,6 +182,7 @@ public class Table {
 				}
 				verifyPrimaryKeyUniqueness(tCopy, nextTuples);
 				nextTuples.add(tCopy);
+				numUpdated++;
 			}
 			// otherwise, do a primary key uniqueness check on the original tuple
 			// and add it to nextTuples
@@ -202,6 +207,8 @@ public class Table {
 			tuples = prevTuples;
 			throw e;
 		}
+		
+		return numUpdated;
 	}
 	
 	

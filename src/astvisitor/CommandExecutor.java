@@ -15,18 +15,76 @@ public class CommandExecutor extends SimpleASTVisitor{
 	public CommandExecutor() {
 	}
 	
-	public static void execute(Command command) throws DatabaseException {
+	public static boolean execute(Command command) throws DatabaseException {
 		
 		if (visitor == null)
 			visitor = new CommandExecutor();
 		
-		command.accept(visitor);
+		return (boolean)command.accept(visitor);
 	}
 	
 	
+	// admin commands *************************************************************************************************
+	
+	// CREATE USER ------------------------------------------------------------
+	@Override
+	public Object visit(CreateUserCommand command) throws DatabaseException {
+		Users.verifyCurrentUserRankAtLeast(Users.Type.ADMIN);
+		String userName = command.getUserName();
+		Users.addUser(userName, command.getUserType());
+		System.out.println("\nUser '"+userName+"' created.");
+		return false;
+	}
+	
+	// DELETE USER ------------------------------------------------------------
+	@Override
+	public Object visit(DeleteUserCommand command) throws DatabaseException {
+		Users.verifyCurrentUserRankAtLeast(Users.Type.ADMIN);
+		String userName = command.getUserName();
+		Users.deleteUser(userName);
+		System.out.println("\nUser '"+userName+"' deleted.");
+		return false;
+	}
+	
+	// CREATE SUBSCHEMA -------------------------------------------------------
+	@Override
+	public Object visit(CreateSubschemaCommand command) throws DatabaseException {
+		
+		Users.verifyCurrentUserRankAtLeast(Users.Type.ADMIN);
+		
+		String tableName = command.getTableName();
+		Database.verifyExist(tableName);
+		Table table = Database.getTable(tableName);
+		
+		table.getSchema().setSubschema(command.getAttrNames());
+		System.out.println("\nSubschema for table '"+tableName+"' created.");
+		return false;
+	}
+	
+	// DELETE SUBSCHEMA -------------------------------------------------------
+	@Override
+	public Object visit(DeleteSubschemaCommand command) throws DatabaseException {
+		
+		Users.verifyCurrentUserRankAtLeast(Users.Type.ADMIN);
+		
+		String tableName = command.getTableName();
+		Database.verifyExist(tableName);
+		Table table = Database.getTable(tableName);
+		
+		table.getSchema().deleteSubschema();
+		System.out.println("\nSubschema for table '"+tableName+"' deleted.");
+		return false;
+	}
+	
+	
+	
+	// SQL commands ***************************************************************************************************
+	
 	// CREATE TABLE---------------------------------------------------------
 	@Override
-	public Object visit(CreateCommand command) throws DatabaseException {
+	public Object visit(CreateTableCommand command) throws DatabaseException {
+		
+		Users.verifyCurrentUserRankAtLeast(Users.Type.USER_A);
 		
 		String newTableName = command.getTableName();
 		
@@ -37,20 +95,22 @@ public class CommandExecutor extends SimpleASTVisitor{
 		Table newTable = new Table(newTableName, newSchema);
 		Database.putTable(newTable);
 		
-		System.out.println("Created new table '"+newTableName+"'.");
-		return newTable;
+		System.out.println("\nCreated new table '"+newTableName+"'.");
+		return false;
 	}
 	
 	
 	// DROP TABLE -------------------------------------------------------------
 	@Override
-	public Object visit(DropCommand command) throws DatabaseException {
+	public Object visit(DropTableCommand command) throws DatabaseException {
+		
+		Users.verifyCurrentUserRankAtLeast(Users.Type.USER_A);
 		
 		String tableName = command.getTableName();
 		Database.dropTable(tableName);
 		
-		System.out.println("Dropped table '"+tableName+"'.");
-		return null;
+		System.out.println("\nDropped table '"+tableName+"'.");
+		return false;
 	}
 	
 	
@@ -69,14 +129,17 @@ public class CommandExecutor extends SimpleASTVisitor{
 		
 		View view = Database.createView(attrNames, tableNames, command.getcondition());
 		
+		System.out.println("");
 		view.print();
-		return null;
+		return false;
 	}
 	
 	
 	// INSERT INTO ------------------------------------------------------------
 	@Override
 	public Object visit(InsertCommand command)throws DatabaseException {
+		
+		Users.verifyCurrentUserRankAtLeast(Users.Type.USER_A);
 		
 		String tableName = command.getTableName();
 		Database.verifyExist(tableName);
@@ -91,8 +154,8 @@ public class CommandExecutor extends SimpleASTVisitor{
 		}
 
 		table.addTuple(new Tuple(newValues));
-		System.out.println("Added tuple to '"+tableName+"'.");
-		return null;
+		System.out.println("\nAdded tuple to '"+tableName+"'.");
+		return false;
 	}
 	
 	
@@ -100,18 +163,23 @@ public class CommandExecutor extends SimpleASTVisitor{
 	@Override
 	public Object visit(DeleteCommand command) throws DatabaseException {
 		
+		Users.verifyCurrentUserRankAtLeast(Users.Type.USER_A);
+		
 		String tableName = command.getTableName();
 		Database.verifyExist(tableName);
 		Table table = Database.getTable(tableName);
 		
-		table.deleteTuples(command.getCondition());
-		return null;
+		int numDeleted = table.deleteTuples(command.getCondition());
+		System.out.println("\n"+numDeleted+" tuples deleted.");
+		return false;
 	}
 	
 	
 	// UPDATE SET WHERE -------------------------------------------------------
 	@Override
 	public Object visit(UpdateCommand command) throws DatabaseException {
+		
+		Users.verifyCurrentUserRankAtLeast(Users.Type.USER_A);
 		
 		String tableName = command.getTableName();
 		Database.verifyExist(tableName);
@@ -127,8 +195,9 @@ public class CommandExecutor extends SimpleASTVisitor{
 			updateValues[i] = ExpEvaluator.evaluate(ud.getValue(), null, null);
 		}
 		
-		table.updateTuples(command.getCondition(), updateAttrNames, updateValues);
-		return null;
+		int numUpdated = table.updateTuples(command.getCondition(), updateAttrNames, updateValues);
+		System.out.println("\n"+numUpdated+" tuples updated.");
+		return false;
 	}
 	
 	
@@ -137,13 +206,14 @@ public class CommandExecutor extends SimpleASTVisitor{
 	public Object visit(HelpTablesCommand command)throws DatabaseException {
 		Collection<Table> tables = Database.getTables();
 		if (tables.isEmpty()) {
-			System.out.println("No tables found.");
-			return null;
+			System.out.println("\nNo tables found.");
+			return false;
 		}
+		System.out.println("");
 		for (Table t : tables) {
 			System.out.println(t.getName());
 		}
-		return null;
+		return false;
 	}
 	
 	// HELP DESCRIBE ----------------------------------------------------------
@@ -153,13 +223,15 @@ public class CommandExecutor extends SimpleASTVisitor{
 		Database.verifyExist(tableName);
 		Table table = Database.getTable(tableName);
 		
+		System.out.println("");
 		table.getSchema().printDescription();
-		return null;
+		return false;
 	}
 	
 	// HELP command -----------------------------------------------------------
 	@Override
 	public Object visit(HelpCommandCommand command)throws DatabaseException {
+		System.out.println("");
 		switch (command.getType()) {
 		case CREATE_TABLE:
 			System.out.println("Creates a new table.\n"
@@ -224,21 +296,12 @@ public class CommandExecutor extends SimpleASTVisitor{
 					+"(?) indicates an optional section.\n");
 			break;
 		}
-		return null;
+		return false;
 	}
 	
 	// QUIT -------------------------------------------------------------------
 	@Override
 	public Object visit(QuitCommand command)throws DatabaseException {
-		try {
-			Database.writeTablesToDisk();
-			System.out.println("Write tables to disk succeeded.");
-		} catch (Exception e) {
-			System.out.println("Write tables to disk failed!");
-			System.out.println(e.getMessage());
-		} finally {
-			System.exit(0);
-		}
-		return null;
+		return true;
 	}
 }
