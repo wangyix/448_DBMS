@@ -21,10 +21,10 @@ public class View {
 			System.out.println("No columns selected.");
 			return 0;
 		}
+		Attribute.printColumnHeaders(attributes);
 		for (int i=0; i<tuples.size(); ++i) {
-			if (i%10 == 0) {
-				if (i > 0)
-					System.out.println("");
+			if (i%10 == 0 && i != 0) {
+				System.out.println("");
 				Attribute.printColumnHeaders(attributes);
 			}
 			tuples.get(i).print(attributes);

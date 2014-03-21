@@ -59,16 +59,19 @@ public class Tuple implements Serializable {
 	
 	
 	// assumes values are same type
-	protected static boolean valuesEqual(Object value1, Object value2) {
-		if (value1 instanceof Integer) {
+	protected static boolean valuesEqual(Attribute.Type type,
+			Object value1, Object value2) {
+		switch (type) {
+		case INT:
 			return (((Integer)value1).intValue() ==
 					((Integer)value2).intValue());
-		} else if (value1 instanceof Double) {
+		case DECIMAL:
 			return (((Double)value1).doubleValue() ==
 					((Double)value2).doubleValue());
-		} else {
+		case CHAR:
 			return ((String)value1).equals((String)value2);
 		}
+		return false;
 	}
 	
 	

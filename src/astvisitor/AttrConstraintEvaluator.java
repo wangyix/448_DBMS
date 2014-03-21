@@ -7,13 +7,13 @@ import exception.DatabaseException;
 
 public class AttrConstraintEvaluator extends Evaluator {
 
-	private static Object value;
+	private static Object value;			// may be casted version of val
 	private static Attribute attribute;
 	
 	private static AttrConstraintEvaluator visitor;			// singleton
 	
 	
-	public static void verifyValueComplies(Object val, Attribute attr)
+	public static Object verifyValueComplies(Object val, Attribute attr)
 			throws DatabaseException {
 		
 		value = val;
@@ -31,8 +31,12 @@ public class AttrConstraintEvaluator extends Evaluator {
 				typeCompatible = true;
 			break;
 		case DECIMAL:
-			if (value instanceof Integer || value instanceof Double)
+			if (value instanceof Double)
 				typeCompatible = true;
+			else if (value instanceof Integer) {
+				typeCompatible = true;
+				value = ((Integer)value).doubleValue();	// if value is int where double is expected, cast it
+			}
 			break;
 		case CHAR:
 			if (value instanceof String) {
@@ -65,6 +69,8 @@ public class AttrConstraintEvaluator extends Evaluator {
 						attrName+"'.");
 			}
 		}
+		
+		return value;
 	}
 	
 	

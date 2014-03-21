@@ -31,19 +31,29 @@ public class Table {
 			throw new DatabaseException("Tuple does not have the correct number of values.");
 		}
 		for (int i=0; i<attributes.length; ++i) {
-			AttrConstraintEvaluator.verifyValueComplies(
+			Object castedValue = AttrConstraintEvaluator.verifyValueComplies(
 					tuple.getValueAt(i), attributes[i]);
+			tuple.setValueAt(i, castedValue);
 		}
 	}
-	private void verifyPrimaryKeyUniqueness(Tuple tuple, List<Tuple> existingTuples)
+	private void verifyPrimaryKeyUniqueness(Tuple newTuple, List<Tuple> existingTuples)
 			throws DatabaseException {
 		
-		for (Tuple t : existingTuples) {
+		// get types and primary key attributes of this tuple
+		int[] primaryKeyPositions = schema.getPrimaryKeyPositions();
+		Object[] newTupleKeyValues = new Object[primaryKeyPositions.length];
+		Attribute.Type[] newTupleKeyTypes = new Attribute.Type[primaryKeyPositions.length];
+		for (int i=0; i<primaryKeyPositions.length; ++i){
+			newTupleKeyValues[i] = newTuple.getValueAt(primaryKeyPositions[i]);
+			newTupleKeyTypes[i] = schema.getAttributes()[primaryKeyPositions[i]].getType();
+		}
+		
+		// go through all existingTuples and compare key attribute values
+		for (Tuple existingTuple : existingTuples) {
 			boolean keyIsDifferent = false;
-			for (Integer position : schema.getPrimaryKeyPositions()) {
-				Object value = t.getValueAt(position);
-				Object newValue = tuple.getValueAt(position);
-				if (!Tuple.valuesEqual(value, newValue)) {
+			for (int i=0; i<primaryKeyPositions.length; ++i) {
+				Object tKeyValue = existingTuple.getValueAt(primaryKeyPositions[i]);
+				if (!Tuple.valuesEqual(newTupleKeyTypes[i], newTupleKeyValues[i], tKeyValue)) {
 					keyIsDifferent = true;
 					break;
 				}
@@ -62,20 +72,21 @@ public class Table {
 			// get the values of the foreign key attributes of newtuple
 			int[] localKeyPositions = fk.getForeignKeyPositions();
 			Object[] localKeyValues = new Object[localKeyPositions.length];
-			for (int i=0; i<localKeyValues.length; ++i) {
-				localKeyValues[i] = tuple.getValueAt(
-						localKeyPositions[i]);
+			Attribute.Type[] localKeyTypes =  new Attribute.Type[localKeyPositions.length];
+			for (int i=0; i<localKeyPositions.length; ++i) {
+				localKeyValues[i] = tuple.getValueAt(localKeyPositions[i]);
+				localKeyTypes[i] = schema.getAttributes()[localKeyPositions[i]].getType();
 			}
 			
 			// iterate through tuples of refTable looking for one with
 			// matching primary key
 			int[] refKeyPositions = refTable.getSchema().getPrimaryKeyPositions();
 			boolean matchFound = false;
-			for (Tuple t : refTable.getTuples()) {
+			for (Tuple refTuple : refTable.getTuples()) {
 				matchFound = true;
-				for (int i=0; i<refKeyPositions.length; ++i) {
-					if (!Tuple.valuesEqual(localKeyValues[i],
-							t.getValueAt(refKeyPositions[i]))) {
+				for (int i=0; i<localKeyPositions.length; ++i) {
+					if (!Tuple.valuesEqual(localKeyTypes[i], localKeyValues[i],
+							refTuple.getValueAt(refKeyPositions[i]))) {
 						matchFound = false;
 						break;
 					}
@@ -165,8 +176,9 @@ public class Table {
 		
 		// make sure each update value complies with its attribute
 		for (int i=0; i<updatePositions.length; ++i) {
-			AttrConstraintEvaluator.verifyValueComplies(
+			Object castedValue = AttrConstraintEvaluator.verifyValueComplies(
 					updateValues[i], schema.getAttributes()[updatePositions[i]]);
+			updateValues[i] = castedValue;
 		}
 		
 		int numUpdated = 0;

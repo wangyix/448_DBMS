@@ -49,8 +49,16 @@ public class Evaluator extends SimpleASTVisitor{
             }
 		}
 		else if (leftIsNumber && rightIsNumber) {
-			double l = ((Double)left).doubleValue();
-			double r = ((Double)right).doubleValue();
+			double l;
+			if (leftIsInt)
+				l = ((Integer)left).doubleValue();
+			else
+				l = ((Double)left).doubleValue();
+			double r;
+			if (rightIsInt)
+				r = ((Integer)right).doubleValue();
+			else
+				r = ((Double)right).doubleValue();
 			if (op.equals("<")) {
                 ret = (l < r);
             } else if (op.equals("<=")) {
