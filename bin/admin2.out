@@ -1,0 +1,93 @@
+
+Reading tables from disk...
+Table 'FACULTY': schema compliance met.
+Table 'FACULTY': primary key uniqueness constraint met.
+Table 'CLASS': schema compliance met.
+Table 'CLASS': primary key uniqueness constraint met.
+Table 'STUDENT': schema compliance met.
+Table 'STUDENT': primary key uniqueness constraint met.
+Table 'GRADE': schema compliance met.
+Table 'GRADE': primary key uniqueness constraint met.
+Table 'DEPARTMENT': schema compliance met.
+Table 'DEPARTMENT': primary key uniqueness constraint met.
+Table 'ENROLLED': schema compliance met.
+Table 'ENROLLED': primary key uniqueness constraint met.
+Table 'FACULTY': referential integrity constraint met.
+Table 'CLASS': referential integrity constraint met.
+Table 'GRADE': referential integrity constraint met.
+Table 'STUDENT': referential integrity constraint met.
+Table 'DEPARTMENT': referential integrity constraint met.
+Table 'ENROLLED': referential integrity constraint met.
+Successfully read tables from disk.
+
+Reading users from disk...
+User 'user2' found.
+User 'user1' found.
+Successfully read users from disk.
+
+SQL> 
+   STU_NUM CLASSNAME                      GRADE
+-----------------------------------------------
+     14181 ENG400                         A    
+     80161 ENG400                         B    
+
+2 rows selected.
+
+SQL> 
+2 tuples deleted.
+
+SQL> 
+   STU_NUM CLASSNAME                      GRADE
+-----------------------------------------------
+
+0 rows selected.
+
+SQL> 
+Dropped table 'GRADE'.
+
+SQL> 
+FACULTY
+CLASS
+STUDENT
+DEPARTMENT
+ENROLLED
+
+SQL> 
+Database error:
+Table 'GRADE' does not exist.
+
+SQL> 
+Subschema for table 'STUDENT' updated.
+
+SQL> 
+User 'user5' created.
+
+SQL> 
+Database error:
+Attribute 'SNUM' referenced in condition does not exist.
+
+SQL> 
+    DEPTID
+----------
+        11
+        22
+
+2 rows selected.
+
+SQL> 
+SNAME                         
+------------------------------
+Smith                         
+M.Lee                         
+Bale                          
+Sharon                        
+Johnson                       
+E.Cho                         
+Angin                         
+
+7 rows selected.
+
+SQL> 
+Write tables to disk succeeded.
+
+Write users to disk succeeded.

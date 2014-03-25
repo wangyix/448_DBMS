@@ -11,93 +11,93 @@ public interface SQLParserConstants {
   /** End of File. */
   int EOF = 0;
   /** RegularExpression Id. */
-  int KW_AND = 8;
+  int KW_AND = 6;
   /** RegularExpression Id. */
-  int KW_OR = 9;
+  int KW_OR = 7;
   /** RegularExpression Id. */
-  int KW_CREATE = 10;
+  int KW_CREATE = 8;
   /** RegularExpression Id. */
-  int KW_CHECK = 11;
+  int KW_CHECK = 9;
   /** RegularExpression Id. */
-  int KW_PRIMARY = 12;
+  int KW_PRIMARY = 10;
   /** RegularExpression Id. */
-  int KW_FOREIGN = 13;
+  int KW_FOREIGN = 11;
   /** RegularExpression Id. */
-  int KW_KEY = 14;
+  int KW_KEY = 12;
   /** RegularExpression Id. */
-  int KW_REFERENCES = 15;
+  int KW_REFERENCES = 13;
   /** RegularExpression Id. */
-  int KW_DROP = 16;
+  int KW_DROP = 14;
   /** RegularExpression Id. */
-  int KW_TABLE = 17;
+  int KW_TABLE = 15;
   /** RegularExpression Id. */
-  int KW_SELECT = 18;
+  int KW_SELECT = 16;
   /** RegularExpression Id. */
-  int KW_FROM = 19;
+  int KW_FROM = 17;
   /** RegularExpression Id. */
-  int KW_WHERE = 20;
+  int KW_WHERE = 18;
   /** RegularExpression Id. */
-  int KW_INSERT = 21;
+  int KW_INSERT = 19;
   /** RegularExpression Id. */
-  int KW_INTO = 22;
+  int KW_INTO = 20;
   /** RegularExpression Id. */
-  int KW_VALUES = 23;
+  int KW_VALUES = 21;
   /** RegularExpression Id. */
-  int KW_DELETE = 24;
+  int KW_DELETE = 22;
   /** RegularExpression Id. */
-  int KW_UPDATE = 25;
+  int KW_UPDATE = 23;
   /** RegularExpression Id. */
-  int KW_SET = 26;
+  int KW_SET = 24;
   /** RegularExpression Id. */
-  int KW_HELP = 27;
+  int KW_HELP = 25;
   /** RegularExpression Id. */
-  int KW_TABLES = 28;
+  int KW_TABLES = 26;
   /** RegularExpression Id. */
-  int KW_DESCRIBE = 29;
+  int KW_DESCRIBE = 27;
   /** RegularExpression Id. */
-  int KW_QUIT = 30;
+  int KW_QUIT = 28;
   /** RegularExpression Id. */
-  int KW_USER = 31;
+  int KW_USER = 29;
   /** RegularExpression Id. */
-  int KW_USERA = 32;
+  int KW_USERA = 30;
   /** RegularExpression Id. */
-  int KW_USERB = 33;
+  int KW_USERB = 31;
   /** RegularExpression Id. */
-  int KW_SUBSCHEMA = 34;
+  int KW_SUBSCHEMA = 32;
   /** RegularExpression Id. */
-  int KW_INT = 35;
+  int KW_INT = 33;
   /** RegularExpression Id. */
-  int KW_CHAR = 36;
+  int KW_CHAR = 34;
   /** RegularExpression Id. */
-  int KW_DECIMAL = 37;
+  int KW_DECIMAL = 35;
   /** RegularExpression Id. */
-  int SYM_PLUS = 38;
+  int SYM_PLUS = 36;
   /** RegularExpression Id. */
-  int SYM_MINUS = 39;
+  int SYM_MINUS = 37;
   /** RegularExpression Id. */
-  int SYM_STAR = 40;
+  int SYM_STAR = 38;
   /** RegularExpression Id. */
-  int SYM_SLASH = 41;
+  int SYM_SLASH = 39;
   /** RegularExpression Id. */
-  int SYM_EQUAL = 42;
+  int SYM_EQUAL = 40;
   /** RegularExpression Id. */
-  int SYM_EXCLEQUAL = 43;
+  int SYM_EXCLEQUAL = 41;
   /** RegularExpression Id. */
-  int SYM_LESS = 44;
+  int SYM_LESS = 42;
   /** RegularExpression Id. */
-  int SYM_MORE = 45;
+  int SYM_MORE = 43;
   /** RegularExpression Id. */
-  int SYM_LESSEQUAL = 46;
+  int SYM_LESSEQUAL = 44;
   /** RegularExpression Id. */
-  int SYM_MOREEQUAL = 47;
+  int SYM_MOREEQUAL = 45;
   /** RegularExpression Id. */
-  int IDENTIFIER = 48;
+  int IDENTIFIER = 46;
   /** RegularExpression Id. */
-  int INT_LITERAL = 49;
+  int INT_LITERAL = 47;
   /** RegularExpression Id. */
-  int DECIMAL_LITERAL = 50;
+  int DECIMAL_LITERAL = 48;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 51;
+  int STRING_LITERAL = 49;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -110,8 +110,6 @@ public interface SQLParserConstants {
     "\"\\n\"",
     "\"\\f\"",
     "\"\\r\"",
-    "<token of kind 6>",
-    "<token of kind 7>",
     "\"AND\"",
     "\"OR\"",
     "\"CREATE\"",

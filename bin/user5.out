@@ -1,0 +1,118 @@
+
+Reading tables from disk...
+Table 'FACULTY': schema compliance met.
+Table 'FACULTY': primary key uniqueness constraint met.
+Table 'CLASS': schema compliance met.
+Table 'CLASS': primary key uniqueness constraint met.
+Table 'STUDENT': schema compliance met.
+Table 'STUDENT': primary key uniqueness constraint met.
+Table 'DEPARTMENT': schema compliance met.
+Table 'DEPARTMENT': primary key uniqueness constraint met.
+Table 'ENROLLED': schema compliance met.
+Table 'ENROLLED': primary key uniqueness constraint met.
+Table 'FACULTY': referential integrity constraint met.
+Table 'CLASS': referential integrity constraint met.
+Table 'STUDENT': referential integrity constraint met.
+Table 'DEPARTMENT': referential integrity constraint met.
+Table 'ENROLLED': referential integrity constraint met.
+Successfully read tables from disk.
+
+Reading users from disk...
+User 'user2' found.
+User 'user1' found.
+User 'user5' found.
+Successfully read users from disk.
+
+SQL> 
+SNAME -- char(30)
+SLEVEL -- char(10) -- SLEVEL='JR' OR SLEVEL='SR' OR SLEVEL='SO' OR SLEVEL='FR'
+AGE -- int -- AGE>16
+
+SQL> 
+Database error:
+Table 'GRADE' does not exist.
+
+SQL> 
+SNAME                          SLEVEL            AGE
+----------------------------------------------------
+Jack                           SO                 17
+Smith                          FR                 21
+Banks                          SR                 18
+M.Lee                          SO                 22
+Bale                           JR                 22
+Lim                            SR                 19
+Sharon                         FR                 22
+Johnson                        JR                 27
+E.Cho                          JR                 27
+Angin                          SR                 25
+
+10 rows selected.
+
+SQL> 
+       FID FNAME                                DEPT
+----------------------------------------------------
+      1030 Guzaldo                                 1
+      1040 Boling                                 44
+      1050 Mason                                  11
+      1060 Zwink                                  22
+      1070 Walton                                  1
+      1080 Teach                                   1
+      1090 Jason                                   1
+
+7 rows selected.
+
+SQL> 
+       FID FNAME                                DEPT
+----------------------------------------------------
+      1010 Layton                                 11
+      1050 Mason                                  11
+      1060 Zwink                                  22
+      1070 Walton                                  1
+      1080 Teach                                   1
+      1090 Jason                                   1
+
+6 rows selected.
+
+SQL> 
+       FID FNAME                                DEPT
+----------------------------------------------------
+      1010 Layton                                 11
+      1020 Jungles                                22
+      1030 Guzaldo                                 1
+      1060 Zwink                                  22
+      1070 Walton                                  1
+      1080 Teach                                   1
+      1090 Jason                                   1
+
+7 rows selected.
+
+SQL> 
+STUDENT_NUM CLASS_NAME                    
+------------------------------------------
+      14181 CS448                         
+      14181 MATH27500                     
+      12341 ENG400                        
+      12341 MATH27500                     
+      80161 ENG400                        
+      80161 ENG320                        
+      80161 HIS21000                      
+      80161 STAT11000                     
+      14181 STAT11000                     
+      12341 COM10000                      
+
+STUDENT_NUM CLASS_NAME                    
+------------------------------------------
+      16711 ENG400                        
+      16711 STAT11000                     
+      12341 HIS21000                      
+      57651 PHYS10000                     
+      57651 ENG320                        
+      57651 COM10000                      
+      14181 ENG400                        
+
+17 rows selected.
+
+SQL> 
+Write tables to disk succeeded.
+
+Write users to disk succeeded.

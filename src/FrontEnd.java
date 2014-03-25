@@ -5,6 +5,7 @@ import parser.*;
 import ast.*;
 import astvisitor.CommandExecutor;
 
+import java.io.*;
 import java.util.*;
 
 public class FrontEnd {
@@ -48,8 +49,10 @@ public class FrontEnd {
 		
 		
 		// parse and execute commands until QUIT
-	
+		CommandExtractor extractor = new CommandExtractor(System.in);
 		SQLParser parser = new SQLParser(System.in);
+		String commandString;
+		InputStream commandStream;
 		Command command;
 		
 		boolean quit = false;
@@ -57,36 +60,41 @@ public class FrontEnd {
 			
 			System.out.print("\nSQL> ");
 			
-			// parse command
+			// extract command
 			try {
-				command = parser.Command();
-			}
-			catch (ParseException e) {
-				parser.ReInit(System.in);
+				commandString = extractor.readCommand();
+				if (commandString==null) {
+					break;
+				}
+			} catch (IOException | ParseException e) {
 				System.out.println("\n"+e.getMessage());
 				continue;
 			}
-			catch (TokenMgrError e) {
-				parser.ReInit(System.in);
+
+			commandStream = new ByteArrayInputStream(
+					commandString.getBytes());
+			
+			// parse command
+			try {
+				parser.ReInit(commandStream);
+				command = parser.Command();
+			}
+			catch (ParseException | TokenMgrError e) {
 				System.out.println("\n"+e.getMessage());
 				continue;
 			}
 			
 			// execute command
-			
 			try {
 				quit = CommandExecutor.execute(command);
 			} catch (DatabaseException e) {
 				System.out.println("\nDatabase error:\n"+e.getMessage());
 				continue;
 			}
-			// TEST: print all tables
-			//for (Table t : Database.getTables()) {
-				//t.print();
-				//System.out.println("");
-			//}
+			
 		} while (!quit);
 		
+		extractor.close();
 		
 		
 		// write database and users to disk

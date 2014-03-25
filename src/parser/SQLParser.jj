@@ -23,12 +23,13 @@ SKIP :
     <" "> | <"\t"> | <"\n"> | <"\f"> | <"\r">
 }
 // Comments
+/*
 SKIP :
 {
     < "--" (~["\n"])* "\n" >
-|	< "{" (~["}"])* "}" >
-//|   < "/*" ( ~["*"] | ("*")+ ~["*","/"] )* ("*")+ "/" >
-}
+//|	< "{" (~["}"])* "}" >
+|   < "/*" ( ~["*"] | ("*")+ ~["*","/"] )* ("*")+ "/" >
+}*/
 
 // SQL keywords
 TOKEN [IGNORE_CASE]:
@@ -96,12 +97,8 @@ TOKEN:
 |	< STRING_LITERAL: "'"(~["\\", "'"]|"''"|"\\'")*"'" >
 	// does not allow escapes except for escaping a single quote
 }
-/*
-TOKEN:
-{	< COMMAND_FOLLOW: ";"([" ", "\t", "\f", "\r"])*"\n" >
-|	< COMMAND_FOLLOW_ERROR: ";"(~["\n"])*"\n" >
-}
-*/
+
+
 
 
 // Grammar --------------------------------------------------------------------
@@ -112,38 +109,33 @@ Command Command():
 	//System.out.println("Command()");
 }
 {
-	(
-		(			< KW_CREATE >
-			(
-				ret = CreateTable_suffix()
-			|	ret = CreateUser_suffix()
-			|	ret = CreateSubschema_suffix()
-			)
-			
-		|	ret = DropTable()
-		|	ret = Select()
-		|	ret = Insert()
-		
-		|	< KW_DELETE >
-			(
-				ret = Delete_suffix()
-			|	ret = DeleteUser_suffix()
-			|	ret = DeleteSubschema_suffix()
-			)
-		|	ret = Update()
-		
-		|	< KW_HELP >
-			(
-				ret = HelpTables_suffix()
-			|	ret = HelpDescribe_suffix()
-			|	ret = HelpCommand_suffix()
-			)
-			
-		|	ret = Quit()
+	(		< KW_CREATE >
+		(
+			ret = CreateTable_suffix()
+		|	ret = CreateUser_suffix()
+		|	ret = CreateSubschema_suffix()
 		)
-		";"
-	|	< EOF > { ret = new QuitCommand(token); }
-	)
+		
+	|	ret = DropTable()
+	|	ret = Select()
+	|	ret = Insert()
+	
+	|	< KW_DELETE >
+		(
+			ret = Delete_suffix()
+		|	ret = DeleteUser_suffix()
+		|	ret = DeleteSubschema_suffix()
+		)
+	|	ret = Update()
+	
+	|	< KW_HELP >
+		(
+			ret = HelpTables_suffix()
+		|	ret = HelpDescribe_suffix()
+		|	ret = HelpCommand_suffix()
+		)
+	|	ret = Quit()
+	) ";" < EOF >
 	{ return ret; }
 }
 

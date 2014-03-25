@@ -1,0 +1,386 @@
+
+Reading tables from disk...
+Table 'FACULTY': schema compliance met.
+Table 'FACULTY': primary key uniqueness constraint met.
+Table 'CLASS': schema compliance met.
+Table 'CLASS': primary key uniqueness constraint met.
+Table 'STUDENT': schema compliance met.
+Table 'STUDENT': primary key uniqueness constraint met.
+Table 'DEPARTMENT': schema compliance met.
+Table 'DEPARTMENT': primary key uniqueness constraint met.
+Table 'ENROLLED': schema compliance met.
+Table 'ENROLLED': primary key uniqueness constraint met.
+Table 'FACULTY': referential integrity constraint met.
+Table 'CLASS': referential integrity constraint met.
+Table 'STUDENT': referential integrity constraint met.
+Table 'DEPARTMENT': referential integrity constraint met.
+Table 'ENROLLED': referential integrity constraint met.
+Successfully read tables from disk.
+
+Reading users from disk...
+User 'user2' found.
+User 'user1' found.
+Successfully read users from disk.
+
+SQL> 
+FACULTY
+CLASS
+STUDENT
+DEPARTMENT
+ENROLLED
+
+SQL> 
+SNUM -- int -- primary key
+SNAME -- char(30)
+DEP -- int -- foreign key references DEPARTMENT(DEPTID)
+SLEVEL -- char(10) -- SLEVEL='JR' OR SLEVEL='SR' OR SLEVEL='SO' OR SLEVEL='FR'
+AGE -- int -- AGE>16
+
+SQL> 
+Creates a new table.
+
+Format:
+
+CREATE TABLE <table_name> (
+<attr_name> <type>,
+<attr_name> <type> (?)CHECK (<condition> AND|OR ...),
+...
+PRIMARY KEY (<attr_name>, ...),
+(?)FOREIGN KEY (<attr_name>, ...) REFERENCES <table_name>(<attr_name>, ...)
+);
+
+(?) indicates an optional section.
+
+
+SQL> 
+Removes a table from the database.
+
+Format:
+
+DROP TABLE <table_name>;
+
+
+SQL> 
+Lexical error at line 1, column 12.  Encountered: ":" (58), after : ""
+
+SQL> 
+Deletes tuples from a table that meet a specified condition.
+
+Format:
+
+DELETE FROM <table_name>
+(?)WHERE <condition> AND|OR ...;
+
+(?) indicates an optional section.
+
+
+SQL> 
+Updates tuples from a table that meet a specified condition.
+
+Format:
+
+UPDATE <table_name>
+SET <attr_name>=<value>, ...
+(?)WHERE <condition> AND|OR ...;
+
+(?) indicates an optional section.
+
+
+SQL> 
+STUDENT_NUM CLASS_NAME                    
+------------------------------------------
+      14181 CS448                         
+      14181 MATH27500                     
+      12341 ENG400                        
+      12341 MATH27500                     
+      80161 ENG400                        
+      80161 ENG320                        
+      80161 HIS21000                      
+      80161 STAT11000                     
+      14181 STAT11000                     
+      12341 COM10000                      
+
+STUDENT_NUM CLASS_NAME                    
+------------------------------------------
+      16711 ENG400                        
+      16711 STAT11000                     
+      12341 HIS21000                      
+      57651 PHYS10000                     
+      57651 ENG320                        
+      57651 COM10000                      
+
+16 rows selected.
+
+SQL> 
+Database error:
+Table 'MANAGER' does not exist.
+
+SQL> 
+Database error:
+Table 'ENROLLED' references this table.
+
+SQL> 
+      SNUM SNAME                         
+-----------------------------------------
+     14181 Jack                          
+     16711 A.Smith                       
+     12341 Banks                         
+     37261 M.Lee                         
+     48291 Bale                          
+     57651 Lim                           
+     10191 Sharon                        
+     73571 Johnson                       
+     80161 E.Cho                         
+     80162 Angin                         
+
+10 rows selected.
+
+SQL> 
+STUDENT_NUM CLASS_NAME                    
+------------------------------------------
+      14181 CS448                         
+      14181 MATH27500                     
+      14181 STAT11000                     
+
+3 rows selected.
+
+SQL> 
+SNAME                          CNAME                          FNAME                         
+--------------------------------------------------------------------------------------------
+Jack                           CS448                          Layton                        
+Jack                           MATH27500                      Mason                         
+Jack                           STAT11000                      Mason                         
+A.Smith                        ENG400                         Boling                        
+A.Smith                        STAT11000                      Mason                         
+Banks                          ENG400                         Boling                        
+Banks                          COM10000                       Boling                        
+Banks                          HIS21000                       Boling                        
+Banks                          MATH27500                      Mason                         
+Lim                            ENG320                         Boling                        
+
+SNAME                          CNAME                          FNAME                         
+--------------------------------------------------------------------------------------------
+Lim                            COM10000                       Boling                        
+Lim                            PHYS10000                      Layton                        
+E.Cho                          ENG400                         Boling                        
+E.Cho                          ENG320                         Boling                        
+E.Cho                          HIS21000                       Boling                        
+E.Cho                          STAT11000                      Mason                         
+
+16 rows selected.
+
+SQL> 
+SNAME                          CNAME                         
+-------------------------------------------------------------
+Jack                           ENG400                        
+Jack                           ENG320                        
+Jack                           COM10000                      
+Jack                           ME30800                       
+Jack                           CS448                         
+Jack                           HIS21000                      
+Jack                           MATH27500                     
+Jack                           STAT11000                     
+Jack                           PHYS10000                     
+A.Smith                        ENG400                        
+
+SNAME                          CNAME                         
+-------------------------------------------------------------
+A.Smith                        ENG320                        
+A.Smith                        COM10000                      
+A.Smith                        ME30800                       
+A.Smith                        CS448                         
+A.Smith                        HIS21000                      
+A.Smith                        MATH27500                     
+A.Smith                        STAT11000                     
+A.Smith                        PHYS10000                     
+Banks                          ENG400                        
+Banks                          ENG320                        
+
+SNAME                          CNAME                         
+-------------------------------------------------------------
+Banks                          COM10000                      
+Banks                          ME30800                       
+Banks                          CS448                         
+Banks                          HIS21000                      
+Banks                          MATH27500                     
+Banks                          STAT11000                     
+Banks                          PHYS10000                     
+M.Lee                          ENG400                        
+M.Lee                          ENG320                        
+M.Lee                          COM10000                      
+
+SNAME                          CNAME                         
+-------------------------------------------------------------
+M.Lee                          ME30800                       
+M.Lee                          CS448                         
+M.Lee                          HIS21000                      
+M.Lee                          MATH27500                     
+M.Lee                          STAT11000                     
+M.Lee                          PHYS10000                     
+Bale                           ENG400                        
+Bale                           ENG320                        
+Bale                           COM10000                      
+Bale                           ME30800                       
+
+SNAME                          CNAME                         
+-------------------------------------------------------------
+Bale                           CS448                         
+Bale                           HIS21000                      
+Bale                           MATH27500                     
+Bale                           STAT11000                     
+Bale                           PHYS10000                     
+Lim                            ENG400                        
+Lim                            ENG320                        
+Lim                            COM10000                      
+Lim                            ME30800                       
+Lim                            CS448                         
+
+SNAME                          CNAME                         
+-------------------------------------------------------------
+Lim                            HIS21000                      
+Lim                            MATH27500                     
+Lim                            STAT11000                     
+Lim                            PHYS10000                     
+Sharon                         ENG400                        
+Sharon                         ENG320                        
+Sharon                         COM10000                      
+Sharon                         ME30800                       
+Sharon                         CS448                         
+Sharon                         HIS21000                      
+
+SNAME                          CNAME                         
+-------------------------------------------------------------
+Sharon                         MATH27500                     
+Sharon                         STAT11000                     
+Sharon                         PHYS10000                     
+Johnson                        ENG400                        
+Johnson                        ENG320                        
+Johnson                        COM10000                      
+Johnson                        ME30800                       
+Johnson                        CS448                         
+Johnson                        HIS21000                      
+Johnson                        MATH27500                     
+
+SNAME                          CNAME                         
+-------------------------------------------------------------
+Johnson                        STAT11000                     
+Johnson                        PHYS10000                     
+E.Cho                          ENG400                        
+E.Cho                          ENG320                        
+E.Cho                          COM10000                      
+E.Cho                          ME30800                       
+E.Cho                          CS448                         
+E.Cho                          HIS21000                      
+E.Cho                          MATH27500                     
+E.Cho                          STAT11000                     
+
+SNAME                          CNAME                         
+-------------------------------------------------------------
+E.Cho                          PHYS10000                     
+Angin                          ENG400                        
+Angin                          ENG320                        
+Angin                          COM10000                      
+Angin                          ME30800                       
+Angin                          CS448                         
+Angin                          HIS21000                      
+Angin                          MATH27500                     
+Angin                          STAT11000                     
+Angin                          PHYS10000                     
+
+90 rows selected.
+
+SQL> 
+Database error:
+Attribute 'SNUM' not found in any of the specified tables.
+
+SQL> 
+Database error:
+Attribute 'SNUM' not found in any of the specified tables.
+
+SQL> 
+Database error:
+Referential constraint to table 'STUDENT' not met.
+
+SQL> 
+Added tuple to 'ENROLLED'.
+
+SQL> 
+Database error:
+Primary key uniqueness constraint not met.
+
+SQL> 
+STUDENT_NUM CLASS_NAME                    
+------------------------------------------
+      14181 CS448                         
+      14181 MATH27500                     
+      14181 STAT11000                     
+      14181 ENG400                        
+
+4 rows selected.
+
+SQL> 
+FNAME                         
+------------------------------
+
+0 rows selected.
+
+SQL> 
+2 tuples updated.
+
+SQL> 
+1 tuple updated.
+
+SQL> 
+CNAME                          MEETS_AT                       ROOM       FACULTY_ID
+-----------------------------------------------------------------------------------
+ENG400                         8:30                           U003             1040
+ENG320                         10:30                          R128             1040
+COM10000                       12:30                          L108             1040
+ME30800                        12:00                          R128             1020
+CS448                          11:00                          R128             1010
+HIS21000                       11:00                          L108             1040
+MATH27500                      15:30                          L108             1050
+STAT11000                      13:00                          R128             1050
+PHYS10000                      14:00                          U003             1010
+
+9 rows selected.
+
+SQL> 
+9 tuples updated.
+
+SQL> 
+CNAME                          MEETS_AT                       ROOM       FACULTY_ID
+-----------------------------------------------------------------------------------
+ENG400                         12:00                          U003             1040
+ENG320                         12:00                          R128             1040
+COM10000                       12:00                          L108             1040
+ME30800                        12:00                          R128             1020
+CS448                          12:00                          R128             1010
+HIS21000                       12:00                          L108             1040
+MATH27500                      12:00                          L108             1050
+STAT11000                      12:00                          R128             1050
+PHYS10000                      12:00                          U003             1010
+
+9 rows selected.
+
+SQL> 
+Created new table 'GRADE'.
+
+SQL> 
+Database error:
+Value does not match type expected by attribute 'STU_NUM'.
+
+SQL> 
+Added tuple to 'GRADE'.
+
+SQL> 
+Added tuple to 'GRADE'.
+
+SQL> 
+Database error:
+Do not have sufficient user privilege.
+
+SQL> 
+Write tables to disk succeeded.
+
+Write users to disk succeeded.

@@ -1,0 +1,245 @@
+
+Reading tables from disk...
+Failed to read tables from disk!
+schemas.ser (The system cannot find the file specified)
+
+Starting with blank database...
+
+Reading users from disk...
+Failed to read users from disk!
+users.ser (The system cannot find the file specified)
+
+Starting with 'admin' as only user...
+
+SQL> 
+Created new table 'DEPARTMENT'.
+
+SQL> 
+Created new table 'FACULTY'.
+
+SQL> 
+Created new table 'STUDENT'.
+
+SQL> 
+Created new table 'CLASS'.
+
+SQL> 
+Created new table 'ENROLLED'.
+
+SQL> 
+Database error:
+Table 'ENROLLED' already exists.
+
+SQL> 
+Database error:
+No local attribute is referencing primary key attribute 'SNUM' of referenced table 'STUDENT'.
+
+SQL> 
+Database error:
+Value does not meet domain constraint of attribute 'DEPTID'.
+
+SQL> 
+Database error:
+Value does not meet domain constraint of attribute 'FID'.
+
+SQL> 
+Database error:
+Value does not meet domain constraint of attribute 'SLEVEL'.
+
+SQL> 
+Added tuple to 'DEPARTMENT'.
+
+SQL> 
+Added tuple to 'DEPARTMENT'.
+
+SQL> 
+Added tuple to 'DEPARTMENT'.
+
+SQL> 
+Added tuple to 'DEPARTMENT'.
+
+SQL> 
+Added tuple to 'DEPARTMENT'.
+
+SQL> 
+Added tuple to 'DEPARTMENT'.
+
+SQL> 
+Added tuple to 'STUDENT'.
+
+SQL> 
+Added tuple to 'STUDENT'.
+
+SQL> 
+Added tuple to 'STUDENT'.
+
+SQL> 
+Added tuple to 'STUDENT'.
+
+SQL> 
+Added tuple to 'STUDENT'.
+
+SQL> 
+Added tuple to 'STUDENT'.
+
+SQL> 
+Added tuple to 'STUDENT'.
+
+SQL> 
+Added tuple to 'STUDENT'.
+
+SQL> 
+Added tuple to 'STUDENT'.
+
+SQL> 
+Added tuple to 'STUDENT'.
+
+SQL> 
+Added tuple to 'FACULTY'.
+
+SQL> 
+Added tuple to 'FACULTY'.
+
+SQL> 
+Added tuple to 'FACULTY'.
+
+SQL> 
+Added tuple to 'FACULTY'.
+
+SQL> 
+Added tuple to 'FACULTY'.
+
+SQL> 
+Added tuple to 'FACULTY'.
+
+SQL> 
+Added tuple to 'FACULTY'.
+
+SQL> 
+Added tuple to 'FACULTY'.
+
+SQL> 
+Added tuple to 'FACULTY'.
+
+SQL> 
+Added tuple to 'CLASS'.
+
+SQL> 
+Added tuple to 'CLASS'.
+
+SQL> 
+Added tuple to 'CLASS'.
+
+SQL> 
+Added tuple to 'CLASS'.
+
+SQL> 
+Added tuple to 'CLASS'.
+
+SQL> 
+Added tuple to 'CLASS'.
+
+SQL> 
+Added tuple to 'CLASS'.
+
+SQL> 
+Added tuple to 'CLASS'.
+
+SQL> 
+Added tuple to 'CLASS'.
+
+SQL> 
+Added tuple to 'ENROLLED'.
+
+SQL> 
+Added tuple to 'ENROLLED'.
+
+SQL> 
+Added tuple to 'ENROLLED'.
+
+SQL> 
+Added tuple to 'ENROLLED'.
+
+SQL> 
+Added tuple to 'ENROLLED'.
+
+SQL> 
+Added tuple to 'ENROLLED'.
+
+SQL> 
+Added tuple to 'ENROLLED'.
+
+SQL> 
+Added tuple to 'ENROLLED'.
+
+SQL> 
+Added tuple to 'ENROLLED'.
+
+SQL> 
+Added tuple to 'ENROLLED'.
+
+SQL> 
+Added tuple to 'ENROLLED'.
+
+SQL> 
+Added tuple to 'ENROLLED'.
+
+SQL> 
+Added tuple to 'ENROLLED'.
+
+SQL> 
+Added tuple to 'ENROLLED'.
+
+SQL> 
+Added tuple to 'ENROLLED'.
+
+SQL> 
+Added tuple to 'ENROLLED'.
+
+SQL> 
+User 'user1' created.
+
+SQL> 
+User 'user2' created.
+
+SQL> 
+Database error:
+User 'user3' does not exist.
+
+SQL> 
+User 'user4' created.
+
+SQL> 
+User 'user4' deleted.
+
+SQL> 
+Subschema for table 'STUDENT' created.
+
+SQL> 
+Subschema for table 'DEPARTMENT' created.
+
+SQL> 
+Database error:
+Table 'GRADE' does not exist.
+
+SQL> 
+Database error:
+Attribute 'FFFID' does not exist.
+
+SQL> 
+FACULTY
+CLASS
+STUDENT
+DEPARTMENT
+ENROLLED
+
+SQL> 
+CNAME -- char(30) -- primary key
+MEETS_AT -- char(30)
+ROOM -- char(10)
+FACULTY_ID -- int -- foreign key references FACULTY(FID)
+
+SQL> 
+Write tables to disk succeeded.
+
+Write users to disk succeeded.
